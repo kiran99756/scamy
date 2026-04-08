@@ -1,0 +1,238 @@
+
+
+<html lang="en">  
+<head>  
+<meta charset="UTF-8">  
+<meta name="viewport" content="width=device-width, initial-scale=1.0">  
+<title>Quiz</title>  <!-- Font -->  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600&display=swap" rel="stylesheet">  <style>  
+  h1, h2, h3 {  
+  color: #c084fc;  
+  text-shadow: 0 0 5px #9b30ff, 0 0 10px #6a0dad, 0 0 15px #9b30ff;  
+  animation: flicker 2s infinite;  
+}  
+  
+@keyframes flicker {  
+  0%, 19%, 21%, 23%, 100% { opacity: 1; }  
+  20%, 22% { opacity: 0.7; }  
+}  
+  * { margin:0; padding:0; box-sizing:border-box; font-family: 'Poppins', sans-serif; }  
+  body { background:#0a0a0a; color:#e0d4ff; text-align:center; }  
+  header { background: linear-gradient(90deg,#1a001f,#4b0082); padding:20px; font-size:26px; font-weight:600; color:white; }  
+  nav { display:flex; justify-content:center; flex-wrap:wrap; background:#14001a; padding:10px; }  
+  nav a { color:#c084fc; margin:8px 12px; text-decoration:none; font-weight:bold; }  
+  nav a:hover { color:white; }  
+  
+  .container { padding:30px 20px; max-width:800px; margin:0 auto; animation: fadeIn 1s ease-in; }  
+  h2 { margin-bottom:20px; }  
+  
+  .question { background:#1a001f; margin:15px 0; padding:20px; border-radius:12px; border:1px solid #6a0dad; text-align:left; }  
+  .options { margin-top:10px; display:flex; flex-direction:column; gap:8px; }  
+  .option { background:#14001a; padding:10px 15px; border-radius:8px; border:1px solid #6a0dad; color:#e0d4ff; cursor:pointer; transition:0.3s; text-align:left; }  
+  .option:hover { background:#6a0dad; }  
+  
+  .correct { background: #228B22 !important; color:white; }  
+  .wrong { background: #B22222 !important; color:white; }  
+  
+  #score { font-size:20px; margin-top:20px; font-weight:bold; }  
+  
+  @keyframes fadeIn { from {opacity:0; transform:translateY(20px);} to {opacity:1; transform:translateY(0);} }
+
+  /* Language Switcher - only addition */
+  .lang-switcher {
+    display: flex;
+    justify-content: center;
+    gap: 10px;
+    padding: 10px;
+    background-color: #0d0014;
+    flex-wrap: wrap;
+  }
+  .lang-btn {
+    background: #2a003a;
+    color: #c084fc;
+    border: 1px solid #6a0dad;
+    padding: 6px 16px;
+    border-radius: 20px;
+    cursor: pointer;
+    font-size: 14px;
+    font-family: 'Poppins', sans-serif;
+    transition: all 0.3s;
+  }
+  .lang-btn:hover, .lang-btn.active {
+    background: #6a0dad;
+    color: white;
+    box-shadow: 0 0 10px #9b30ff;
+  }
+</style>  </head>  <body>  <header data-key="header">Quiz</header>  <nav>  
+  <a data-key="nav_main" href="index.html">Main</a>  
+  <a data-key="nav_scams" href="scam.html">Scams</a>  
+  <a data-key="nav_quiz" href="quiz.html">Quiz</a>  
+  <a data-key="nav_contact" href="contact.html">Contact</a>  
+</nav>
+
+<!-- Language Switcher -->
+<div class="lang-switcher">
+  <button class="lang-btn active" onclick="setLang('en', this)">🇬🇧 English</button>
+  <button class="lang-btn" onclick="setLang('hi', this)">🇮🇳 हिन्दी</button>
+  <button class="lang-btn" onclick="setLang('mr', this)">🇮🇳 मराठी</button>
+</div>
+
+<div class="container">  
+  <h2 data-key="quiz_title">Scam Awareness Quiz</h2>  
+  <div id="quiz"></div>  
+  <div id="score">Score: 0 / 0</div>  
+</div>  <script>
+
+// All questions per language
+const allQuestions = {
+  en: [
+    {q:"UPI request from unknown?", options:["Accept","Reject","Ignore"], correct:1},
+    {q:"Share OTP?", options:["Yes","No","Maybe"], correct:1},
+    {q:"Free money link?", options:["Click","Ignore","Check"], correct:1},
+    {q:"Unknown QR scan?", options:["Scan","Don't scan","Ask"], correct:1},
+    {q:"Share UPI PIN?", options:["Yes","No","Sometimes"], correct:1},
+    {q:"Fake app?", options:["Install","Avoid","Try"], correct:1},
+    {q:"Prize call?", options:["Believe","Ignore","Pay"], correct:1},
+    {q:"Refund scam?", options:["Follow","Reject","Think"], correct:1},
+    {q:"Screen share app?", options:["Install","Don't","Ask"], correct:1},
+    {q:"Stranger payment?", options:["Return","Verify","Ignore"], correct:1}
+  ],
+  hi: [
+    {q:"अनजान व्यक्ति से UPI अनुरोध?", options:["स्वीकार करें","अस्वीकार करें","अनदेखा करें"], correct:1},
+    {q:"OTP साझा करें?", options:["हाँ","नहीं","शायद"], correct:1},
+    {q:"मुफ्त पैसों का लिंक?", options:["क्लिक करें","अनदेखा करें","जाँचें"], correct:1},
+    {q:"अज्ञात QR स्कैन?", options:["स्कैन करें","स्कैन न करें","पूछें"], correct:1},
+    {q:"UPI PIN साझा करें?", options:["हाँ","नहीं","कभी-कभी"], correct:1},
+    {q:"नकली ऐप?", options:["इंस्टॉल करें","बचें","आज़माएं"], correct:1},
+    {q:"इनाम की कॉल?", options:["विश्वास करें","अनदेखा करें","भुगतान करें"], correct:1},
+    {q:"रिफंड घोटाला?", options:["पालन करें","अस्वीकार करें","सोचें"], correct:1},
+    {q:"स्क्रीन शेयर ऐप?", options:["इंस्टॉल करें","न करें","पूछें"], correct:1},
+    {q:"अजनबी का भुगतान?", options:["वापस करें","सत्यापित करें","अनदेखा करें"], correct:1}
+  ],
+  mr: [
+    {q:"अनोळखी व्यक्तीकडून UPI विनंती?", options:["स्वीकार करा","नाकारा","दुर्लक्ष करा"], correct:1},
+    {q:"OTP शेअर करायचा?", options:["हो","नाही","कदाचित"], correct:1},
+    {q:"मोफत पैशांची लिंक?", options:["क्लिक करा","दुर्लक्ष करा","तपासा"], correct:1},
+    {q:"अज्ञात QR स्कॅन?", options:["स्कॅन करा","स्कॅन करू नका","विचारा"], correct:1},
+    {q:"UPI PIN शेअर करायचा?", options:["हो","नाही","कधीकधी"], correct:1},
+    {q:"बनावट ॲप?", options:["इन्स्टॉल करा","टाळा","वापरून पाहा"], correct:1},
+    {q:"बक्षीसाचा फोन?", options:["विश्वास ठेवा","दुर्लक्ष करा","पैसे द्या"], correct:1},
+    {q:"रिफंड फसवणूक?", options:["पाळा","नाकारा","विचार करा"], correct:1},
+    {q:"स्क्रीन शेअर ॲप?", options:["इन्स्टॉल करा","करू नका","विचारा"], correct:1},
+    {q:"अनोळखी व्यक्तीचे पेमेंट?", options:["परत करा","तपासा","दुर्लक्ष करा"], correct:1}
+  ]
+};
+
+const scoreLabels = {
+  en: "Score",
+  hi: "स्कोर",
+  mr: "गुण"
+};
+
+let currentLang = 'en';
+let score = 0;
+let totalAnswered = 0;
+
+const quizDiv = document.getElementById("quiz");
+const scoreDiv = document.getElementById("score");
+
+function buildQuiz(lang) {
+  score = 0;
+  totalAnswered = 0;
+  quizDiv.innerHTML = "";
+  scoreDiv.innerText = `${scoreLabels[lang]}: 0 / 0`;
+
+  const questions = allQuestions[lang];
+
+  questions.forEach((item, index) => {
+    const qDiv = document.createElement("div");
+    qDiv.className = "question";
+    qDiv.innerHTML = `<p><b>${index+1}. ${item.q}</b></p>`;
+
+    const optionsDiv = document.createElement("div");
+    optionsDiv.className = "options";
+
+    item.options.forEach((opt, i) => {
+      const btn = document.createElement("button");
+      btn.className = "option";
+      btn.innerText = opt;
+
+      btn.onclick = () => {
+        if(btn.classList.contains("answered")) return;
+
+        if(i === item.correct){
+          btn.classList.add("correct");
+          score++;
+        } else {
+          btn.classList.add("wrong");
+          optionsDiv.children[item.correct].classList.add("correct");
+        }
+
+        totalAnswered++;
+        Array.from(optionsDiv.children).forEach(b=>b.classList.add("answered"));
+        scoreDiv.innerText = `${scoreLabels[lang]}: ${score} / ${totalAnswered}`;
+      };
+
+      optionsDiv.appendChild(btn);
+    });
+
+    qDiv.appendChild(optionsDiv);
+    quizDiv.appendChild(qDiv);
+  });
+}
+
+// Build English quiz on load
+buildQuiz('en');
+
+const uiTranslations = {
+  en: { header:"Quiz", nav_main:"Main", nav_scams:"Scams", nav_quiz:"Quiz", nav_contact:"Contact", quiz_title:"Scam Awareness Quiz" },
+  hi: { header:"क्विज़", nav_main:"मुख्य", nav_scams:"घोटाले", nav_quiz:"क्विज़", nav_contact:"संपर्क", quiz_title:"घोटाला जागरूकता क्विज़" },
+  mr: { header:"प्रश्नमंजुषा", nav_main:"मुख्य", nav_scams:"फसवणूक", nav_quiz:"प्रश्नमंजुषा", nav_contact:"संपर्क", quiz_title:"फसवणूक जागरूकता प्रश्नमंजुषा" }
+};
+
+function setLang(lang, btn) {
+  currentLang = lang;
+  const t = uiTranslations[lang];
+
+  document.querySelectorAll('[data-key]').forEach(el => {
+    const key = el.getAttribute('data-key');
+    if (t[key] !== undefined) el.textContent = t[key];
+  });
+
+  document.querySelectorAll('.lang-btn').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  document.documentElement.lang = lang;
+
+  buildQuiz(lang);
+}
+</script>  <button id="topBtn" title="Go to top">UP</button>
+
+<script>  
+let topBtn = document.getElementById("topBtn");  
+window.onscroll = function() {  
+  if(document.body.scrollTop > 200 || document.documentElement.scrollTop > 200){  
+    topBtn.style.display = "block";  
+  } else { topBtn.style.display = "none"; }  
+};  
+  
+topBtn.onclick = function() {  
+  window.scrollTo({top:0, behavior:"smooth"});  
+};  
+</script>  <style>  
+#topBtn {  
+  display: none;  
+  position: fixed;  
+  bottom: 30px;  
+  right: 30px;  
+  z-index: 99;  
+  background: #6a0dad;  
+  color: white;  
+  border: none;  
+  padding: 12px 15px;  
+  border-radius: 50%;  
+  cursor: pointer;  
+  box-shadow: 0 0 15px #9b30ff;  
+  transition: transform 0.3s, box-shadow 0.3s;  
+}  
+#topBtn:hover { transform: scale(1.2); box-shadow: 0 0 25px #9b30ff; }  
+</style>  </body>  
+</html>
