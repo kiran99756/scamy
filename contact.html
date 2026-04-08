@@ -2,117 +2,110 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Contact</title>
 
   <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600&display=swap" rel="stylesheet">
 
-  <title>Contact</title>
+  <!-- Supabase -->
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js"></script>
+
+  <script>
+    const client = supabase.createClient(
+      "https://kyfjmaeybpnfoxavtlcz.supabase.co",
+      "YOUR_PUBLIC_ANON_KEY"
+    );
+  </script>
 
   <style>
-    * {
-      margin: 0;
-      padding: 0;
-      box-sizing: border-box;
-      font-family: 'Poppins', sans-serif;
-    }
-
-    body {
-      background-color: #0a0a0a;
-      color: #e0d4ff;
-    }
-
-    h1, h2, h3 {
-      color: #c084fc;
-      text-shadow: 0 0 5px #9b30ff, 0 0 10px #6a0dad, 0 0 15px #9b30ff;
-      animation: flicker 2s infinite;
-    }
-
-    @keyframes flicker {
-      0%, 19%, 21%, 23%, 100% { opacity: 1; }
-      20%, 22% { opacity: 0.7; }
-    }
+    * { margin:0; padding:0; box-sizing:border-box; font-family:'Poppins',sans-serif; }
+    body { background:#0a0a0a; color:#e0d4ff; }
 
     header {
       background: linear-gradient(90deg, #1a001f, #4b0082);
-      padding: 20px;
-      text-align: center;
-      font-size: 26px;
-      font-weight: 600;
-      color: white;
+      padding:20px; text-align:center; font-size:26px; color:white;
     }
 
     nav {
-      display: flex;
-      justify-content: center;
-      flex-wrap: wrap;
-      background-color: #14001a;
-      padding: 10px;
+      display:flex; justify-content:center; flex-wrap:wrap;
+      background:#14001a; padding:10px;
     }
-
-    nav a {
-      color: #c084fc;
-      text-decoration: none;
-      margin: 8px 12px;
-      font-weight: bold;
-    }
-
-    nav a:hover {
-      color: white;
-    }
+    nav a { color:#c084fc; margin:8px; text-decoration:none; }
 
     .container {
-      padding: 30px 20px;
-      max-width: 600px;
-      margin: 0 auto;
-      text-align: center;
-      animation: fadeIn 1s ease-in;
+      padding:30px; max-width:600px; margin:auto; text-align:center;
     }
 
-    input, textarea {
-      width: 100%;
-      padding: 12px;
-      margin: 10px 0;
-      border-radius: 10px;
-      border: 1px solid #6a0dad;
-      background-color: #1a001f;
-      color: #e0d4ff;
-      font-size: 16px;
-      transition: 0.3s;
-    }
-
-    input:focus, textarea:focus {
-      outline: none;
-      border-color: #9b30ff;
-      box-shadow: 0 0 10px #9b30ff;
+    input, select {
+      width:100%; padding:12px; margin:10px 0;
+      border-radius:10px; border:1px solid #6a0dad;
+      background:#1a001f; color:#fff;
     }
 
     button {
-      background-color: #6a0dad;
-      color: white;
-      border: none;
-      padding: 12px 25px;
-      border-radius: 10px;
-      cursor: pointer;
-      font-size: 16px;
-      margin-top: 10px;
-      transition: 0.3s;
+      background:#6a0dad; color:white;
+      padding:12px; border:none; border-radius:10px;
+      cursor:pointer;
     }
 
     button:hover {
-      transform: scale(1.1);
-      box-shadow: 0 0 20px #9b30ff;
+      transform:scale(1.05);
+      box-shadow:0 0 10px #9b30ff;
     }
+  </style>
+</head>
 
-    footer {
-      background-color: #14001a;
-      text-align: center;
-      padding: 15px;
-      margin-top: 30px;
-      color: #aaa;
-    }
+<body>
 
-    @keyframes fadeIn {
-      from { opacity: 0; transform: translateY(20px); }
-      to { opacity: 1; transform: translateY(0); }
+<header>Contact</header>
+
+<nav>
+  <a href="index.html">Main</a>
+  <a href="scam.html">Scams</a>
+  <a href="quiz.html">Quiz</a>
+  <a href="contact.html">Contact</a>
+</nav>
+
+<div class="container">
+  <h1>Report a Scam</h1>
+
+  <form id="scamForm">
+    <input type="text" id="name" placeholder="Your Name" required>
+    <input type="number" id="amount" placeholder="Amount Lost" required>
+
+    <select id="type">
+      <option>UPI Scam</option>
+      <option>OTP Scam</option>
+      <option>Call Scam</option>
+    </select>
+
+    <button type="submit">Submit</button>
+  </form>
+</div>
+
+<script>
+document.getElementById("scamForm").addEventListener("submit", async (e) => {
+  e.preventDefault();
+
+  const name = document.getElementById("name").value;
+  const amount = parseInt(document.getElementById("amount").value);
+  const type = document.getElementById("type").value;
+
+  const { error } = await client
+    .from("scams")
+    .insert([{ name, amount, scam_type: type }]);
+
+  if (error) {
+    alert("❌ Error saving data");
+    console.error(error);
+  } else {
+    alert("✅ Data saved!");
+    document.getElementById("scamForm").reset();
+  }
+});
+</script>
+
+</body>
+</html>      to { opacity: 1; transform: translateY(0); }
     }
 
     .card-container {
