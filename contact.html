@@ -202,17 +202,38 @@ const client = supabase.createClient(
   <h1 data-key="contact_heading">Contact Us</h1>
 
   <!-- GOOGLE FORM CONNECTED -->
- <form action="https://docs.google.com/forms/d/e/1FAIpQLSdDk5CiSlGaj0qhHiBW9RcClX4q88cpwxwO_z3n8gh2oRWPYg/formResponse" method="POST">
-   
-    <input type="text" name="entry.458250408" id="input_name" placeholder="Your Name" required>
+ <form id="scamForm">
+  <input type="text" id="name" placeholder="Name" required>
+  <input type="number" id="amount" placeholder="Amount Lost" required>
+  
+  <select id="type">
+    <option>UPI Scam</option>
+    <option>OTP Scam</option>
+    <option>Call Scam</option>
+  </select>
 
-    <input type="email" name="entry.1955933575" id="input_email" placeholder="Your Email" required>
+  <button type="submit">Submit</button>
+</form>
 
-    <textarea name="entry.327660957" id="input_message" placeholder="Your Message" rows="6" required></textarea>
+<script>
+document.getElementById("scamForm").addEventListener("submit", async (e) => {
+  e.preventDefault();
 
-    <button type="submit" data-key="send_btn">Send</button>
-  </form>
+  const name = document.getElementById("name").value;
+  const amount = document.getElementById("amount").value;
+  const type = document.getElementById("type").value;
 
+  const { error } = await supabase
+    .from("scams")
+    .insert([{ name, amount, scam_type: type }]);
+
+  if (error) {
+    alert("Error saving data");
+  } else {
+    alert("Data saved!");
+  }
+});
+</script>
   <!-- HIDDEN IFRAME -->
   <iframe name="hidden_iframe" style="display:none;"></iframe>
 
