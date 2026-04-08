@@ -12,7 +12,7 @@
   <script>
     const client = supabase.createClient(
       "https://kyfjmaeybpnfoxavtlcz.supabase.co",
-      "YOUR_PUBLIC_ANON_KEY"
+      "sb_publishable_PfINMvLfU3t2TWNsSpVkdw_bs2tAqIc"
     );
   </script>
 
@@ -31,8 +31,25 @@
     }
     nav a { color:#c084fc; margin:8px; text-decoration:none; }
 
+    .lang-switcher {
+      display:flex; justify-content:center; gap:10px;
+      padding:10px; background:#0d0014;
+    }
+
+    .lang-btn {
+      background:#2a003a; color:#c084fc;
+      border:1px solid #6a0dad;
+      padding:6px 16px; border-radius:20px;
+      cursor:pointer;
+    }
+
+    .lang-btn.active {
+      background:#6a0dad; color:white;
+    }
+
     .container {
-      padding:30px; max-width:600px; margin:auto; text-align:center;
+      padding:30px; max-width:600px;
+      margin:auto; text-align:center;
     }
 
     input, select {
@@ -43,30 +60,52 @@
 
     button {
       background:#6a0dad; color:white;
-      padding:12px; border:none; border-radius:10px;
-      cursor:pointer;
+      padding:12px; border:none;
+      border-radius:10px; cursor:pointer;
     }
 
     button:hover {
       transform:scale(1.05);
       box-shadow:0 0 10px #9b30ff;
     }
+
+    .card-container {
+      display:flex; justify-content:center;
+    }
+
+    .card {
+      width:250px; background:#111;
+      border-radius:10px; padding:15px;
+      margin:20px; text-align:center;
+    }
+
+    footer {
+      background:#14001a;
+      text-align:center; padding:15px;
+      color:#aaa;
+    }
   </style>
 </head>
 
 <body>
 
-<header>Contact</header>
+<header data-key="header">Contact</header>
 
 <nav>
-  <a href="index.html">Main</a>
-  <a href="scam.html">Scams</a>
-  <a href="quiz.html">Quiz</a>
-  <a href="contact.html">Contact</a>
+  <a data-key="nav_main" href="index.html">Main</a>
+  <a data-key="nav_scams" href="scam.html">Scams</a>
+  <a data-key="nav_quiz" href="quiz.html">Quiz</a>
+  <a data-key="nav_contact" href="contact.html">Contact</a>
 </nav>
 
+<div class="lang-switcher">
+  <button class="lang-btn active" onclick="setLang('en', this)">English</button>
+  <button class="lang-btn" onclick="setLang('hi', this)">हिन्दी</button>
+  <button class="lang-btn" onclick="setLang('mr', this)">मराठी</button>
+</div>
+
 <div class="container">
-  <h1>Report a Scam</h1>
+  <h1 data-key="contact_heading">Contact Us</h1>
 
   <form id="scamForm">
     <input type="text" id="name" placeholder="Your Name" required>
@@ -82,7 +121,19 @@
   </form>
 </div>
 
+<div class="card-container">
+  <div class="card">
+    <h3 data-key="helpline_title">Helpline No</h3>
+    <p>1930</p>
+  </div>
+</div>
+
+<footer>
+  © 2026 Scam Awareness | Stay Smart 🚨
+</footer>
+
 <script>
+// SAVE DATA
 document.getElementById("scamForm").addEventListener("submit", async (e) => {
   e.preventDefault();
 
@@ -102,211 +153,24 @@ document.getElementById("scamForm").addEventListener("submit", async (e) => {
     document.getElementById("scamForm").reset();
   }
 });
-</script>
 
-</body>
-</html>      to { opacity: 1; transform: translateY(0); }
-    }
+// LANGUAGE
+const translations = {
+  en: { header:"Contact", contact_heading:"Contact Us", helpline_title:"Helpline No" },
+  hi: { header:"संपर्क", contact_heading:"हमसे संपर्क करें", helpline_title:"हेल्पलाइन नंबर" },
+  mr: { header:"संपर्क", contact_heading:"आमच्याशी संपर्क करा", helpline_title:"हेल्पलाइन नंबर" }
+};
 
-    .card-container {
-      display: flex;
-      justify-content: center;
-      flex-wrap: wrap;
-    }
+function setLang(lang, btn) {
+  const t = translations[lang];
+  document.querySelectorAll('[data-key]').forEach(el => {
+    const key = el.getAttribute('data-key');
+    if (t[key]) el.textContent = t[key];
+  });
 
-    .card {
-      width: 250px;
-      background: #111;
-      color: white;
-      border-radius: 10px;
-      overflow: hidden;
-      padding: 15px;
-      margin: 20px;
-      transition: 0.3s;
-    }
-
-    .card:hover {
-      transform: translateY(-10px);
-      box-shadow: 0 0 20px #9b30ff;
-    }
-
-    .card img {
-      width: 100%;
-      height: 150px;
-      object-fit: cover;
-      margin-bottom: 15px;
-    }
-
-    /* Language Switcher - only addition */
-    .lang-switcher {
-      display: flex;
-      justify-content: center;
-      gap: 10px;
-      padding: 10px;
-      background-color: #0d0014;
-      flex-wrap: wrap;
-    }
-
-    .lang-btn {
-      background: #2a003a;
-      color: #c084fc;
-      border: 1px solid #6a0dad;
-      padding: 6px 16px;
-      border-radius: 20px;
-      cursor: pointer;
-      font-size: 14px;
-      font-family: 'Poppins', sans-serif;
-      transition: all 0.3s;
-    }
-
-    .lang-btn:hover, .lang-btn.active {
-      background: #6a0dad;
-      color: white;
-      box-shadow: 0 0 10px #9b30ff;
-    }
-  </style>
-</head>
-  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js"></script>
-
-<script>
-const client = supabase.createClient(
-  "https://kyfjmaeybpnfoxavtlcz.supabase.co",
-  "sb_publishable_PfINMvLfU3t2TWNsSpVkdw_bs2tAqIc"
-);
-</script>
-  
-<body>
-
-<header data-key="header">Contact</header>
-
-<nav>
-  <a data-key="nav_main" href="index.html">Main</a>
-  <a data-key="nav_scams" href="scam.html">Scams</a>
-  <a data-key="nav_quiz" href="quiz.html">Quiz</a>
-  <a data-key="nav_contact" href="contact.html">Contact</a>
-</nav>
-
-<!-- Language Switcher -->
-<div class="lang-switcher">
-  <button class="lang-btn active" onclick="setLang('en', this)">🇬🇧 English</button>
-  <button class="lang-btn" onclick="setLang('hi', this)">🇮🇳 हिन्दी</button>
-  <button class="lang-btn" onclick="setLang('mr', this)">🇮🇳 मराठी</button>
-</div>
-
-<div class="container">
-  <h1 data-key="contact_heading">Contact Us</h1>
-
-  <!-- GOOGLE FORM CONNECTED -->
- <form id="scamForm">
-  <input type="text" id="name" placeholder="Name" required>
-  <input type="number" id="amount" placeholder="Amount Lost" required>
-  
-  <select id="type">
-    <option>UPI Scam</option>
-    <option>OTP Scam</option>
-    <option>Call Scam</option>
-  </select>
-
-  <button type="submit">Submit</button>
-</form>
-
-<script>
-document.getElementById("scamForm").addEventListener("submit", async (e) => {
-  e.preventDefault();
-
-  const name = document.getElementById("name").value;
-  const amount = document.getElementById("amount").value;
-  const type = document.getElementById("type").value;
-
-  const { error } = await supabase
-    .from("scams")
-    .insert([{ name, amount, scam_type: type }]);
-
-  if (error) {
-    alert("Error saving data");
-  } else {
-    alert("Data saved!");
-  }
-});
-</script>
-  <!-- HIDDEN IFRAME -->
-  <iframe name="hidden_iframe" style="display:none;"></iframe>
-
-  <script>
-    let submitted = false;
-    window.onload = function () {
-      if (submitted) {
-        alert("Message sent successfully!");
-      }
-    }
-  </script>
-
-</div>
-
-<div class="card-container">
-  <div class="card">
-    <img src="money.png" alt="Card Image">
-    <h3 align="center" data-key="helpline_title">helpline no</h3>
-    <p align="center">1930</p>
-  </div>
-</div>
-
-<footer>
-  © 2026 Scam Awareness | Stay Smart 🚨
-</footer>
-
-<script>
-  const translations = {
-    en: {
-      header: "Contact",
-      nav_main: "Main", nav_scams: "Scams", nav_quiz: "Quiz", nav_contact: "Contact",
-      contact_heading: "Contact Us",
-      input_name: "Your Name",
-      input_email: "Your Email",
-      input_message: "Your Message",
-      send_btn: "Send",
-      helpline_title: "helpline no"
-    },
-    hi: {
-      header: "संपर्क",
-      nav_main: "मुख्य", nav_scams: "घोटाले", nav_quiz: "क्विज़", nav_contact: "संपर्क",
-      contact_heading: "हमसे संपर्क करें",
-      input_name: "आपका नाम",
-      input_email: "आपका ईमेल",
-      input_message: "आपका संदेश",
-      send_btn: "भेजें",
-      helpline_title: "हेल्पलाइन नंबर"
-    },
-    mr: {
-      header: "संपर्क",
-      nav_main: "मुख्य", nav_scams: "फसवणूक", nav_quiz: "प्रश्नमंजुषा", nav_contact: "संपर्क",
-      contact_heading: "आमच्याशी संपर्क करा",
-      input_name: "तुमचे नाव",
-      input_email: "तुमचा ईमेल",
-      input_message: "तुमचा संदेश",
-      send_btn: "पाठवा",
-      helpline_title: "हेल्पलाइन नंबर"
-    }
-  };
-
-  function setLang(lang, btn) {
-    const t = translations[lang];
-    if (!t) return;
-
-    document.querySelectorAll('[data-key]').forEach(el => {
-      const key = el.getAttribute('data-key');
-      if (t[key] !== undefined) el.textContent = t[key];
-    });
-
-    document.getElementById('input_name').placeholder = t.input_name;
-    document.getElementById('input_email').placeholder = t.input_email;
-    document.getElementById('input_message').placeholder = t.input_message;
-
-    document.querySelectorAll('.lang-btn').forEach(b => b.classList.remove('active'));
-    btn.classList.add('active');
-
-    document.documentElement.lang = lang;
-  }
+  document.querySelectorAll('.lang-btn').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+}
 </script>
 
 </body>
