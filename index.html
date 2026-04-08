@@ -203,7 +203,30 @@ to { opacity: 0; }
   color: white;
   box-shadow: 0 0 10px #9b30ff;
 }
-</style>  </head>
+
+    .dashboard {
+  display: flex;
+  justify-content: center;
+  gap: 20px;
+  margin-top: 30px;
+  flex-wrap: wrap;
+}
+
+.dashboard .card {
+  background: #1a001f;
+  border: 1px solid #6a0dad;
+  padding: 20px;
+  border-radius: 12px;
+  text-align: center;
+  width: 250px;
+  box-shadow: 0 0 15px rgba(138,43,226,0.5);
+}
+
+.dashboard h1 {
+  font-size: 32px;
+  margin-top: 10px;
+}
+</style>  
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js"></script>
 
 <script>
@@ -212,6 +235,59 @@ const client = supabase.createClient(
   "sb_publishable_PfINMvLfU3t2TWNsSpVkdw_bs2tAqIc"
 );
 </script>
+  
+</head>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js"></script>
+
+<script>
+const client = supabase.createClient(
+  "https://kyfjmaeybpnfoxavtlcz.supabase.co",
+  "sb_publishable_PfINMvLfU3t2TWNsSpVkdw_bs2tAqIc"
+);
+</script>
+  <script>
+// ANIMATION
+function animateValue(id, start, end, duration, prefix="") {
+  let current = start;
+  let increment = end / (duration / 20);
+
+  let timer = setInterval(() => {
+    current += increment;
+
+    if (current >= end) {
+      current = end;
+      clearInterval(timer);
+    }
+
+    document.getElementById(id).innerText =
+      prefix + Math.floor(current);
+  }, 20);
+}
+
+// LOAD DATA
+async function loadDashboard() {
+  const { data, error } = await client
+    .from("scams")
+    .select("*");
+
+  if (error) {
+    console.error(error);
+    return;
+  }
+
+  let total = data.length;
+  let amount = 0;
+
+  data.forEach(row => {
+    amount += row.amount;
+  });
+
+  animateValue("totalScams", 0, total, 1500);
+  animateValue("totalAmount", 0, amount, 1500, "₹");
+}
+
+loadDashboard();
+  </script>
   
   <body>  <header class="container">ScamY</header>
 
@@ -281,7 +357,17 @@ They pressure you to share details or make payments, leading to financial loss.Y
         <li data-key="dont5">Don't share screen with strangers</li>
       </ul>
     </div>
+<div class="dashboard">
+  <div class="card">
+    <h3>Total Scams</h3>
+    <h1 id="totalScams">0</h1>
+  </div>
 
+  <div class="card">
+    <h3>Total Money Lost</h3>
+    <h1 id="totalAmount">₹0</h1>
+  </div>
+</div>
   </div>
 </div>
 <div class="container">      
