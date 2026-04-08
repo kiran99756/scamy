@@ -39,6 +39,18 @@ padding: 5px 5px;
 border-radius: 5px;
 
 }
+    .flow {
+  display: flex;
+  justify-content: center;
+  gap: 10px;
+  font-size: 20px;
+  animation: slide 2s infinite alternate;
+}
+
+@keyframes slide {
+  from { transform: translateX(-10px); }
+  to { transform: translateX(10px); }
+}
 
 nav a:hover {
 color: white;
@@ -235,7 +247,16 @@ They pressure you to share details or make payments, leading to financial loss.Y
 </div>      
     <div class="container">
   <h2 data-key="safety_title">Safety Tips</h2>
-
+      
+<div id="totalScams">0</div>
+<div id="totalAmount">0</div>
+      <div class="flow">
+  <div>User</div>
+  <div>→</div>
+  <div>Scam Type</div>
+  <div>→</div>
+  <div>Money Lost</div>
+      </div>
   <div class="cards">
 
     <div class="card" style="border-left:5px solid green;">
@@ -449,6 +470,39 @@ transition: transform 0.3s, box-shadow 0.3s;
     document.documentElement.lang = lang;
   }
 </script>
+<script>
+async function loadData() {
+  const { data, error } = await supabase
+    .from("scams")
+    .select("*");
 
+  let total = data.length;
+  let amount = 0;
+
+  data.forEach(row => {
+    amount += row.amount;
+  });
+
+  animateValue("totalScams", 0, total, 1500);
+  animateValue("totalAmount", 0, amount, 1500);
+}
+
+loadData();
+</script>
+    <script>
+function animateValue(id, start, end, duration) {
+  let current = start;
+  let increment = end / (duration / 20);
+
+  let timer = setInterval(() => {
+    current += increment;
+    if (current >= end) {
+      current = end;
+      clearInterval(timer);
+    }
+    document.getElementById(id).innerText = Math.floor(current);
+  }, 20);
+}
+    </script>
 </div></body>      
 </html>
