@@ -415,20 +415,27 @@
     let chart;
 
     async function loadDashboard() {
-      const { data, error } = await client.from("scams").select("*");
-      if (error) { console.error(error); return; }
+  const { data, error } = await client
+    .from("transactions")
+    .select(`
+      amount,
+      scam_type,
+      customers ( name )
+    `);
 
-      const total = data.length;
-      let amount = 0;
-      const types = { "UPI Scam": 0, "OTP Scam": 0, "Call Scam": 0 };
+  if (error) { console.error(error); return; }
 
-      data.forEach(r => {
-        amount += r.amount;
-        if (types[r.scam_type] !== undefined) types[r.scam_type]++;
-      });
+  // ✅ PASTE HERE
+  let total = data.length;
+  let amount = 0;
 
-      animateValue("totalScams", 0, total, 1000);
-      animateValue("totalAmount", 0, amount, 1000, "₹");
+  data.forEach(r => {
+    amount += r.amount;
+  });
+
+  animateValue("totalScams", 0, total, 1000);
+  animateValue("totalAmount", 0, amount, 1000, "₹");
+    }
 
       const ctx = document.getElementById("scamChart").getContext("2d");
       if (chart) chart.destroy();
@@ -456,7 +463,7 @@
       data.slice(-5).reverse().forEach(item => {
         list.innerHTML += `
           <div class="card">
-            <b>${item.name}</b><br>
+            <b>${item.customers.name}</b><br>
             ₹${item.amount}<br>
             ${item.scam_type}
           </div>`;
