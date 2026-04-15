@@ -142,7 +142,35 @@ document.getElementById("scamForm").addEventListener("submit", async (e) => {
   const type = document.getElementById("type").value;
 
   const { error } = await client
-    .from("scams")
+
+    // OLD CODE REMOVE
+// .from("scams").insert(...)
+
+// NEW CODE ADD
+let { data: existing } = await client
+  .from("customers")
+  .select("*")
+  .eq("name", name)
+  .single();
+
+let customer_id;
+
+if (existing) {
+  customer_id = existing.id;
+} else {
+  const { data } = await client
+    .from("customers")
+    .insert([{ name }])
+    .select();
+
+  customer_id = data[0].id;
+}
+
+await client.from("transactions").insert([{
+  customer_id,
+  amount,
+  scam_type: type
+}]);
     .insert([{ name, amount, scam_type: type }]);
 
   if (error) {
