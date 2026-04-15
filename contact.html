@@ -142,29 +142,31 @@ document.getElementById("scamForm").addEventListener("submit", async (e) => {
   const type = document.getElementById("type").value;
 
   // Check customer
-  let { data: existing } = await client
+let { data: existing } = await client
+  .from("customers")
+  .select("*")
+  .eq("name", name)
+  .maybeSingle();
+
+let customer_id;
+
+if (existing) {
+  customer_id = existing.id;
+} else {
+  const { data, error } = await client
     .from("customers")
-    .select("*")
-    .eq("name", name)
+    .insert([{ name }])
+    .select()
     .single();
 
-  let customer_id;
-
-  if (existing) {
-    customer_id = existing.id;
-  } else {
-    const { data, error } = await client
-      .from("customers")
-      .insert([{ name }])
-      .select();
-
-    if (error) {
-      alert("Error saving customer");
-      return;
-    }
-
-    customer_id = data[0].id;
+  if (error) {
+    console.error(error);
+    alert("Error saving customer");
+    return;
   }
+
+  customer_id = data.id;
+}
 
   // Insert transaction
   const { error } = await client
