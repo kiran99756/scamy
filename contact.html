@@ -137,51 +137,52 @@
 document.getElementById("scamForm").addEventListener("submit", async (e) => {
   e.preventDefault();
 
-  const name = document.getElementById("name").value;
+  const name = document.getElementById("name").value.trim();
   const amount = parseInt(document.getElementById("amount").value);
   const type = document.getElementById("type").value;
 
-  const { error } = await client
-
-    // OLD CODE REMOVE
-// .from("scams").insert(...)
-
-// NEW CODE ADD
-let { data: existing } = await client
-  .from("customers")
-  .select("*")
-  .eq("name", name)
-  .single();
-
-let customer_id;
-
-if (existing) {
-  customer_id = existing.id;
-} else {
-  const { data } = await client
+  // Check customer
+  let { data: existing } = await client
     .from("customers")
-    .insert([{ name }])
-    .select();
+    .select("*")
+    .eq("name", name)
+    .single();
 
-  customer_id = data[0].id;
-}
+  let customer_id;
 
-await client.from("transactions").insert([{
-  customer_id,
-  amount,
-  scam_type: type
-}]);
-    .insert([{ name, amount, scam_type: type }]);
+  if (existing) {
+    customer_id = existing.id;
+  } else {
+    const { data, error } = await client
+      .from("customers")
+      .insert([{ name }])
+      .select();
+
+    if (error) {
+      alert("Error saving customer");
+      return;
+    }
+
+    customer_id = data[0].id;
+  }
+
+  // Insert transaction
+  const { error } = await client
+    .from("transactions")
+    .insert([{
+      customer_id,
+      amount,
+      scam_type: type
+    }]);
 
   if (error) {
     alert("❌ Error saving data");
-    console.error(error);
   } else {
     alert("✅ Data saved!");
     document.getElementById("scamForm").reset();
   }
 });
-
+  
 // LANGUAGE
 const translations = {
   en: { header:"Contact", contact_heading:"Contact Us", helpline_title:"Helpline No" },
