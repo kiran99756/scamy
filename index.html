@@ -413,8 +413,7 @@
     }
 
     let chart;
-
-    async function loadDashboard() {
+async function loadDashboard() {
   const { data, error } = await client
     .from("transactions")
     .select(`
@@ -425,53 +424,54 @@
 
   if (error) { console.error(error); return; }
 
-  // ✅ PASTE HERE
   let total = data.length;
   let amount = 0;
+  const types = { "UPI Scam": 0, "OTP Scam": 0, "Call Scam": 0 };
 
   data.forEach(r => {
     amount += r.amount;
+
+    if (types[r.scam_type] !== undefined) {
+      types[r.scam_type]++;
+    }
   });
 
   animateValue("totalScams", 0, total, 1000);
   animateValue("totalAmount", 0, amount, 1000, "₹");
+
+  // ✅ CHART
+  const ctx = document.getElementById("scamChart").getContext("2d");
+  if (chart) chart.destroy();
+
+  chart = new Chart(ctx, {
+    type: "bar",
+    data: {
+      labels: Object.keys(types),
+      datasets: [{
+        label: "Scams",
+        data: Object.values(types),
+        backgroundColor: ["#6a0dad", "#9b30ff", "#c084fc"]
+      }]
     }
+  });
 
-      const ctx = document.getElementById("scamChart").getContext("2d");
-      if (chart) chart.destroy();
-      chart = new Chart(ctx, {
-        type: "bar",
-        data: {
-          labels: Object.keys(types),
-          datasets: [{
-            label: "Scams",
-            data: Object.values(types),
-            backgroundColor: ["#6a0dad", "#9b30ff", "#c084fc"]
-          }]
-        },
-        options: {
-          plugins: { legend: { labels: { color: "#e0d4ff" } } },
-          scales: {
-            x: { ticks: { color: "#e0d4ff" } },
-            y: { ticks: { color: "#e0d4ff" } }
-          }
-        }
-      });
+  // ✅ RECENT LIST
+  const list = document.getElementById("recentList");
+  list.innerHTML = "";
 
-      const list = document.getElementById("recentList");
-      list.innerHTML = "";
-      data.slice(-5).reverse().forEach(item => {
-        list.innerHTML += `
-          <div class="card">
-            <b>${item.customers.name}</b><br>
-            ₹${item.amount}<br>
-            ${item.scam_type}
-          </div>`;
-      });
-    }
-
-    loadDashboard();
-    setInterval(loadDashboard, 5000);
+  data.slice(-5).reverse().forEach(item => {
+    list.innerHTML += `
+      <div class="card">
+        <b>${item.customers.name}</b><br>
+        ₹${item.amount}<br>
+        ${item.scam_type}
+      </div>`;
+  });
+}
+    // 🚀 Load
+loadDashboard();
+setInterval(loadDashboard, 5000);
+    
   </script>
 
 </body>
