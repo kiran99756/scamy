@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>ScamY – Scams in India</title>
+  <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg: #060408; --bg2: #0e060f; --bg3: #170a1a;
+      --purple: #7c3aed; --purple-light: #a855f7; --purple-glow: #c084fc;
+      --accent: #e040fb; --text: #ede9fe; --text-dim: #9178b5;
+      --border: rgba(124,58,237,0.3); --card-bg: rgba(23,10,26,0.9);
+      --red: #ef4444; --green: #22c55e;
+    }
+    * { margin:0; padding:0; box-sizing:border-box; }
+    body { background:var(--bg); color:var(--text); font-family:'DM Sans',sans-serif; min-height:100vh; overflow-x:hidden; }
+    body::before { content:''; position:fixed; inset:0; background-image:url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.04'/%3E%3C/svg%3E"); pointer-events:none; z-index:0; opacity:0.4; }
+
+    header { position:sticky; top:0; z-index:100; background:rgba(6,4,8,0.92); backdrop-filter:blur(20px); border-bottom:1px solid var(--border); padding:0 30px; display:flex; align-items:center; justify-content:space-between; height:64px; }
+    .logo { font-family:'Syne',sans-serif; font-size:22px; font-weight:800; color:white; letter-spacing:-0.5px; }
+    .logo span { color:var(--accent); }
+    nav { display:flex; gap:4px; align-items:center; }
+    nav a { color:var(--text-dim); text-decoration:none; padding:7px 14px; border-radius:8px; font-size:14px; font-weight:500; transition:all 0.2s; }
+    nav a:hover, nav a.active { color:white; background:var(--bg3); }
+
+    .lang-bar { display:flex; justify-content:flex-end; gap:6px; padding:8px 30px; background:var(--bg2); border-bottom:1px solid var(--border); position:relative; z-index:10; }
+    .lang-btn { background:transparent; color:var(--text-dim); border:1px solid var(--border); padding:4px 12px; border-radius:20px; cursor:pointer; font-size:12px; font-family:'DM Sans',sans-serif; transition:all 0.2s; }
+    .lang-btn:hover, .lang-btn.active { background:var(--purple); color:white; border-color:var(--purple); box-shadow:0 0 10px rgba(124,58,237,0.4); }
+
+    /* PAGE HERO */
+    .page-hero { position:relative; z-index:1; text-align:center; padding:60px 30px 40px; background:radial-gradient(ellipse 70% 50% at 50% 0%, rgba(124,58,237,0.12) 0%, transparent 70%); border-bottom:1px solid var(--border); }
+    .page-hero h1 { font-family:'Syne',sans-serif; font-size:clamp(24px,4vw,40px); font-weight:800; letter-spacing:-0.5px; margin-bottom:10px; }
+    .page-hero h1 em { font-style:normal; color:var(--accent); }
+    .page-hero p { color:var(--text-dim); font-size:15px; max-width:540px; margin:0 auto; line-height:1.6; }
+    .page-hero-badge { display:inline-flex; align-items:center; gap:8px; background:rgba(239,68,68,0.1); border:1px solid rgba(239,68,68,0.3); padding:5px 14px; border-radius:20px; font-size:12px; color:#fca5a5; margin-bottom:20px; }
+
+    /* CARDS GRID */
+    .section { padding:40px 30px; max-width:1200px; margin:0 auto; position:relative; z-index:1; }
+    .cases-grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(280px,1fr)); gap:16px; }
+    .case-card {
+      background:var(--card-bg); border:1px solid var(--border);
+      border-left:3px solid var(--red); border-radius:14px; padding:22px;
+      transition:all 0.3s; animation:fadeUp 0.6s ease both; animation-delay:var(--d,0s);
+      position:relative; overflow:hidden;
+    }
+    .case-card::after { content:''; position:absolute; top:0; left:0; right:0; height:1px; background:linear-gradient(90deg,var(--red),transparent); opacity:0; transition:opacity 0.3s; }
+    .case-card:hover { border-left-color:var(--purple); border-color:var(--purple); box-shadow:0 8px 32px rgba(124,58,237,0.12); transform:translateY(-4px); }
+    .case-card:hover::after { opacity:1; }
+    .case-amount { font-family:'Syne',sans-serif; color:var(--red); font-size:22px; font-weight:800; margin:10px 0 6px; }
+    .case-card h3 { font-family:'Syne',sans-serif; font-size:15px; font-weight:700; color:var(--purple-glow); margin-bottom:4px; }
+    .case-card p { font-size:13px; line-height:1.7; color:var(--text-dim); margin-top:8px; }
+    .case-tag { display:inline-block; background:rgba(124,58,237,0.12); border:1px solid var(--border); padding:3px 10px; border-radius:20px; font-size:11px; color:var(--purple-glow); margin-top:10px; }
+
+    footer { text-align:center; padding:30px; font-size:13px; color:var(--text-dim); border-top:1px solid var(--border); background:var(--bg2); position:relative; z-index:1; }
+    footer a { color:var(--purple-glow); text-decoration:none; }
+    #topBtn { display:none; position:fixed; bottom:28px; right:28px; z-index:50; background:var(--purple); color:white; border:none; width:44px; height:44px; border-radius:50%; cursor:pointer; font-size:18px; box-shadow:0 0 20px rgba(124,58,237,0.5); transition:all 0.3s; }
+    #topBtn:hover { background:var(--purple-light); transform:translateY(-3px); }
+    @keyframes fadeUp { from{opacity:0;transform:translateY(20px)} to{opacity:1;transform:translateY(0)} }
+    @media(max-width:768px){ header{padding:0 16px;} .lang-bar{padding:8px 16px;} .section{padding:30px 16px;} .page-hero{padding:40px 16px 30px;} }
+  </style>
+</head>
+<body>
+
+<header>
+  <div class="logo">Scam<span>Y</span></div>
+  <nav>
+    <a href="index.html" data-key="nav_main">Home</a>
+    <a href="scam.html" class="active" data-key="nav_scams">Scams</a>
+    <a href="quiz.html" data-key="nav_quiz">Quiz</a>
+    <a href="checker.html" data-key="nav_checker">Checker</a>
+    <a href="contact.html" data-key="nav_contact">Report</a>
+  </nav>
+</header>
+
+<div class="lang-bar">
+  <button class="lang-btn active" onclick="setLang('en',this)">🇬🇧 English</button>
+  <button class="lang-btn" onclick="setLang('hi',this)">🇮🇳 हिन्दी</button>
+  <button class="lang-btn" onclick="setLang('mr',this)">🇮🇳 मराठी</button>
+</div>
+
+<div class="page-hero">
+  <div class="page-hero-badge">🚨 Real Verified Cases · India</div>
+  <h1 data-key="page_title">Real <em>Digital Scams</em></h1>
+  <p data-key="page_desc">Learn from real-life cases to protect yourself from online frauds in India.</p>
+</div>
+
+<div class="section">
+  <div class="cases-grid">
+    <div class="case-card" style="--d:0.05s"><h3 data-key="c1_title">Digital Arrest Scam</h3><div class="case-amount">₹22.92 Crore</div><p data-key="c1_desc">Scammers posed as CBI officials and held the victim on video calls for 47 days, stealing ₹22.92 crore.</p><span class="case-tag">Digital Arrest</span></div>
+    <div class="case-card" style="--d:0.1s"><h3 data-key="c2_title">Fake Police Scam – Delhi</h3><div class="case-amount">₹2.19 Crore</div><p data-key="c2_desc">Victim was coerced by scammers impersonating police, losing ₹2.19 crore in the process.</p><span class="case-tag">Impersonation</span></div>
+    <div class="case-card" style="--d:0.15s"><h3 data-key="c3_title">Retired Professor Scam</h3><div class="case-amount">₹10 Lakh</div><p data-key="c3_desc">A retired professor was accused of terrorism links online, losing about ₹10 lakh under threat.</p><span class="case-tag">Terror Threat</span></div>
+    <div class="case-card" style="--d:0.2s"><h3 data-key="c4_title">UPI Hijack Scam – Delhi</h3><div class="case-amount">100+ Cases</div><p data-key="c4_desc">Cyber criminals hijacked phones and used Aadhaar info to manipulate UPI transactions in 100+ cases.</p><span class="case-tag">UPI Fraud</span></div>
+    <div class="case-card" style="--d:0.25s"><h3 data-key="c5_title">Aadhaar Digital Arrest</h3><div class="case-amount">₹25 Lakh</div><p data-key="c5_desc">Thieves used Aadhaar to threaten legal action and stole ₹25 lakh from an elderly victim.</p><span class="case-tag">Aadhaar Fraud</span></div>
+    <div class="case-card" style="--d:0.3s"><h3 data-key="c6_title">Crypto Scam Network</h3><div class="case-amount">₹2,200 Crore</div><p data-key="c6_desc">Fraudulent apps like HPZ tokens defrauded users of massive cryptocurrency investments across India.</p><span class="case-tag">Crypto</span></div>
+    <div class="case-card" style="--d:0.35s"><h3 data-key="c7_title">Voice Phishing Scam</h3><div class="case-amount">₹81,747</div><p data-key="c7_desc">Scammers mimicked a friend's voice to trick the 72-year-old into transferring ₹81,747 via UPI.</p><span class="case-tag">Voice Phishing</span></div>
+    <div class="case-card" style="--d:0.4s"><h3 data-key="c8_title">WhatsApp APK Scam</h3><div class="case-amount">₹22,000</div><p data-key="c8_desc">Victim installed a fake SBI app via WhatsApp and lost ₹22,000 in unauthorized transactions.</p><span class="case-tag">APK Fraud</span></div>
+    <div class="case-card" style="--d:0.45s"><h3 data-key="c9_title">Courier UPI Scam</h3><div class="case-amount">₹2,898</div><p data-key="c9_desc">Scammers pretending to be a courier service forced the victim to pay ₹2,898 using WhatsApp Pay.</p><span class="case-tag">Courier Scam</span></div>
+    <div class="case-card" style="--d:0.5s"><h3 data-key="c10_title">UPI Unauthorized Debits</h3><div class="case-amount">₹51,000</div><p data-key="c10_desc">A user lost ₹51,000 in multiple unauthorized UPI transactions even without sharing OTP.</p><span class="case-tag">UPI Fraud</span></div>
+  </div>
+</div>
+
+<footer>
+  © 2026 ScamY · Scam Awareness India · Built by <a href="#">Kiran, Ashwin, Harshal &amp; Siddharth</a> ·
+  Emergency Helpline: <strong style="color:var(--accent)">1930</strong>
+</footer>
+<button id="topBtn" onclick="window.scrollTo({top:0,behavior:'smooth'})">↑</button>
+
+<script>
+const translations={
+  en:{nav_main:"Home",nav_scams:"Scams",nav_quiz:"Quiz",nav_checker:"Checker",nav_contact:"Report",page_title:"Real Digital Scams",page_desc:"Learn from real-life cases to protect yourself from online frauds in India.",c1_title:"Digital Arrest Scam",c1_desc:"Scammers posed as CBI officials and held the victim on video calls for 47 days, stealing ₹22.92 crore.",c2_title:"Fake Police Scam – Delhi",c2_desc:"Victim was coerced by scammers impersonating police, losing ₹2.19 crore in the process.",c3_title:"Retired Professor Scam",c3_desc:"A retired professor was accused of terrorism links online, losing about ₹10 lakh under threat.",c4_title:"UPI Hijack Scam – Delhi",c4_desc:"Cyber criminals hijacked phones and used Aadhaar info to manipulate UPI transactions in 100+ cases.",c5_title:"Aadhaar Digital Arrest",c5_desc:"Thieves used Aadhaar to threaten legal action and stole ₹25 lakh from an elderly victim.",c6_title:"Crypto Scam Network",c6_desc:"Fraudulent apps like HPZ tokens defrauded users of massive cryptocurrency investments across India.",c7_title:"Voice Phishing Scam",c7_desc:"Scammers mimicked a friend's voice to trick the 72-year-old into transferring ₹81,747 via UPI.",c8_title:"WhatsApp APK Scam",c8_desc:"Victim installed a fake SBI app via WhatsApp and lost ₹22,000 in unauthorized transactions.",c9_title:"Courier UPI Scam",c9_desc:"Scammers pretending to be a courier service forced the victim to pay ₹2,898 using WhatsApp Pay.",c10_title:"UPI Unauthorized Debits",c10_desc:"A user lost ₹51,000 in multiple unauthorized UPI transactions even without sharing OTP."},
+  hi:{nav_main:"होम",nav_scams:"घोटाले",nav_quiz:"क्विज़",nav_checker:"जाँचकर्ता",nav_contact:"रिपोर्ट",page_title:"असली डिजिटल घोटाले",page_desc:"भारत में ऑनलाइन धोखाधड़ी से खुद को बचाने के लिए असली मामलों से सीखें।",c1_title:"डिजिटल अरेस्ट घोटाला",c1_desc:"जालसाज़ों ने CBI अधिकारी बनकर पीड़ित को 47 दिनों तक वीडियो कॉल पर बंधक बनाया और ₹22.92 करोड़ चुरा लिए।",c2_title:"नकली पुलिस घोटाला – दिल्ली",c2_desc:"पुलिस का रूप धारण करने वाले जालसाज़ों ने पीड़ित को डरा-धमकाकर ₹2.19 करोड़ लूट लिए।",c3_title:"सेवानिवृत्त प्रोफेसर घोटाला",c3_desc:"एक सेवानिवृत्त प्रोफेसर पर ऑनलाइन आतंकवाद का झूठा आरोप लगाकर धमकी देते हुए लगभग ₹10 लाख ठगे गए।",c4_title:"UPI हाईजैक घोटाला",c4_desc:"साइबर अपराधियों ने फोन हाईजैक करके और आधार जानकारी का उपयोग करके 100+ मामलों में UPI लेनदेन को हेरफेर किया।",c5_title:"आधार डिजिटल अरेस्ट",c5_desc:"चोरों ने आधार का उपयोग करके कानूनी कार्रवाई की धमकी दी और एक बुजुर्ग पीड़ित से ₹25 लाख चुरा लिए।",c6_title:"क्रिप्टो घोटाला नेटवर्क",c6_desc:"HPZ टोकन जैसे धोखाधड़ी वाले ऐप्स ने पूरे भारत में उपयोगकर्ताओं के भारी क्रिप्टोकरेंसी निवेश का घोटाला किया।",c7_title:"वॉयस फिशिंग घोटाला",c7_desc:"जालसाज़ों ने दोस्त की आवाज़ की नकल करके 72 वर्षीय व्यक्ति को UPI के ज़रिए ₹81,747 ट्रांसफर करने के लिए बरगलाया।",c8_title:"WhatsApp APK घोटाला",c8_desc:"पीड़ित ने WhatsApp के ज़रिए नकली SBI ऐप इंस्टॉल किया और अनाधिकृत लेनदेन में ₹22,000 गंवा दिए।",c9_title:"कूरियर UPI घोटाला",c9_desc:"कूरियर सेवा का नाटक करने वाले जालसाज़ों ने पीड़ित को WhatsApp Pay के ज़रिए ₹2,898 का भुगतान करने पर मजबूर किया।",c10_title:"UPI अनाधिकृत डेबिट",c10_desc:"एक उपयोगकर्ता ने OTP साझा किए बिना भी कई अनाधिकृत UPI लेनदेन में ₹51,000 गंवाए।"},
+  mr:{nav_main:"मुख्य",nav_scams:"फसवणूक",nav_quiz:"प्रश्नमंजुषा",nav_checker:"तपासक",nav_contact:"रिपोर्ट",page_title:"खऱ्या डिजिटल फसवणुका",page_desc:"भारतातील ऑनलाइन फसवणुकांपासून स्वतःचे संरक्षण करण्यासाठी खऱ्या प्रकरणांमधून शिका.",c1_title:"डिजिटल अटक फसवणूक",c1_desc:"फसवणूकदारांनी CBI अधिकारी असल्याचे भासवून पीड़िताला 47 दिवस व्हिडिओ कॉलवर अडकवले आणि ₹22.92 कोटी चोरले.",c2_title:"बनावट पोलीस फसवणूक",c2_desc:"पोलीस असल्याचे भासवणाऱ्या फसवणूकदारांनी पीड़िताला धमकावून ₹2.19 कोटी लुटले.",c3_title:"निवृत्त प्राध्यापक फसवणूक",c3_desc:"एका निवृत्त प्राध्यापकावर ऑनलाइन दहशतवादाचा खोटा आरोप करून धमकी देत सुमारे ₹10 लाख फसवले गेले.",c4_title:"UPI हायजॅक फसवणूक",c4_desc:"सायबर गुन्हेगारांनी फोन हायजॅक करून आधार माहितीचा वापर करत 100+ प्रकरणांमध्ये UPI व्यवहार हाताळले.",c5_title:"आधार डिजिटल अटक",c5_desc:"चोरांनी आधारचा वापर करून कायदेशीर कारवाईची धमकी दिली आणि एका वृद्ध पीड़िताकडून ₹25 लाख चोरले.",c6_title:"क्रिप्टो फसवणूक नेटवर्क",c6_desc:"HPZ टोकनसारख्या बनावट ॲप्सनी संपूर्ण भारतात वापरकर्त्यांच्या मोठ्या क्रिप्टोकरन्सी गुंतवणुकीची फसवणूक केली.",c7_title:"व्हॉइस फिशिंग फसवणूक",c7_desc:"फसवणूकदारांनी मित्राच्या आवाजाची नक्कल करून 72 वर्षीय व्यक्तीला UPI द्वारे ₹81,747 हस्तांतरित करण्यास फसवले.",c8_title:"WhatsApp APK फसवणूक",c8_desc:"पीड़िताने WhatsApp द्वारे बनावट SBI ॲप इन्स्टॉल केला आणि अनधिकृत व्यवहारांमध्ये ₹22,000 गमावले.",c9_title:"कुरिअर UPI फसवणूक",c9_desc:"कुरिअर सेवा असल्याचे भासवणाऱ्या फसवणूकदारांनी पीड़िताला WhatsApp Pay द्वारे ₹2,898 भरण्यास भाग पाडले.",c10_title:"UPI अनधिकृत डेबिट",c10_desc:"एका वापरकर्त्याने OTP शेअर न करताही अनेक अनधिकृत UPI व्यवहारांमध्ये ₹51,000 गमावले."}
+};
+function setLang(lang,btn){
+  const t=translations[lang]; if(!t)return;
+  document.querySelectorAll('[data-key]').forEach(el=>{const k=el.getAttribute('data-key');if(t[k]!==undefined)el.textContent=t[k];});
+  document.querySelectorAll('.lang-btn').forEach(b=>b.classList.remove('active'));
+  btn.classList.add('active');
+}
+window.addEventListener('scroll',()=>{document.getElementById('topBtn').style.display=window.scrollY>300?'block':'none';});
+</script>
+</body>
+</html>
