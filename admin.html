@@ -1,0 +1,384 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>ScamY – Admin</title>
+  <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <style>
+    :root {
+      --bg: #060408; --bg2: #0e060f; --bg3: #170a1a;
+      --purple: #7c3aed; --purple-light: #a855f7; --purple-glow: #c084fc;
+      --accent: #e040fb; --text: #ede9fe; --text-dim: #9178b5;
+      --border: rgba(124,58,237,0.3); --card-bg: rgba(23,10,26,0.9);
+      --red: #ef4444; --green: #22c55e; --gold: #fbbf24;
+    }
+    * { margin:0; padding:0; box-sizing:border-box; }
+    body { background:var(--bg); color:var(--text); font-family:'DM Sans',sans-serif; min-height:100vh; overflow-x:hidden; }
+    body::before { content:''; position:fixed; inset:0; background-image:url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.04'/%3E%3C/svg%3E"); pointer-events:none; z-index:0; opacity:0.4; }
+
+    header { position:sticky; top:0; z-index:100; background:rgba(6,4,8,0.92); backdrop-filter:blur(20px); border-bottom:1px solid var(--border); padding:0 30px; display:flex; align-items:center; justify-content:space-between; height:64px; }
+    .logo { font-family:'Syne',sans-serif; font-size:22px; font-weight:800; color:white; letter-spacing:-0.5px; }
+    .logo span { color:var(--accent); }
+    nav { display:flex; gap:4px; align-items:center; }
+    nav a { color:var(--text-dim); text-decoration:none; padding:7px 14px; border-radius:8px; font-size:14px; font-weight:500; transition:all 0.2s; }
+    nav a:hover, nav a.active { color:white; background:var(--bg3); }
+
+    .login-wrap { min-height:calc(100vh - 64px); display:flex; align-items:center; justify-content:center; position:relative; z-index:1; }
+    .login-card { background:var(--card-bg); border:1px solid var(--border); border-radius:20px; padding:48px 40px; width:90%; max-width:420px; text-align:center; box-shadow:0 0 60px rgba(124,58,237,0.2); animation:fadeUp 0.6s ease both; }
+    .login-icon { font-size:48px; margin-bottom:16px; animation:float 3s ease-in-out infinite; }
+    @keyframes float{0%,100%{transform:translateY(0)}50%{transform:translateY(-10px)}}
+    .login-card h2 { font-family:'Syne',sans-serif; color:white; font-size:22px; font-weight:800; margin-bottom:6px; }
+    .login-card p { color:var(--text-dim); font-size:13px; margin-bottom:28px; }
+    .login-input { width:100%; padding:13px 16px; border-radius:10px; border:1px solid var(--border); background:var(--bg3); color:white; font-size:15px; font-family:'DM Sans',sans-serif; margin-bottom:14px; transition:all 0.2s; outline:none; }
+    .login-input:focus { border-color:var(--purple); box-shadow:0 0 0 3px rgba(124,58,237,0.15); }
+    .login-btn { width:100%; background:var(--purple); color:white; border:none; padding:13px; border-radius:10px; cursor:pointer; font-size:15px; font-family:'DM Sans',sans-serif; font-weight:600; transition:all 0.2s; letter-spacing:0.3px; }
+    .login-btn:hover { background:var(--purple-light); box-shadow:0 0 20px rgba(124,58,237,0.4); }
+    .login-err { color:var(--red); font-size:13px; margin-top:10px; display:none; }
+
+    #dashboard { display:none; }
+    .admin-top { display:flex; align-items:center; justify-content:space-between; padding:20px 30px; background:rgba(6,4,8,0.9); border-bottom:1px solid var(--border); position:sticky; top:64px; z-index:90; backdrop-filter:blur(10px); flex-wrap:wrap; gap:12px; }
+    .admin-top-title { font-family:'Syne',sans-serif; font-size:18px; font-weight:800; }
+    .admin-top-title span { color:var(--accent); }
+    .logout-btn { background:transparent; border:1px solid rgba(239,68,68,0.4); color:var(--red); padding:8px 18px; border-radius:8px; cursor:pointer; font-size:14px; font-family:'DM Sans',sans-serif; transition:all 0.2s; }
+    .logout-btn:hover { background:rgba(239,68,68,0.1); border-color:var(--red); }
+
+    .stats-row { display:flex; flex-wrap:wrap; gap:14px; padding:28px 30px 0; justify-content:center; position:relative; z-index:1; }
+    .stat-box { background:var(--card-bg); border:1px solid var(--border); border-radius:14px; padding:20px 28px; text-align:center; min-width:150px; animation:fadeUp 0.5s ease both; animation-delay:var(--d,0s); transition:all 0.3s; }
+    .stat-box:hover { border-color:var(--purple); box-shadow:0 0 20px rgba(124,58,237,0.12); }
+    .stat-box h4 { font-size:11px; color:var(--text-dim); text-transform:uppercase; letter-spacing:1px; margin-bottom:8px; }
+    .stat-box .num { font-family:'Syne',sans-serif; font-size:26px; font-weight:800; color:var(--purple-glow); }
+    .stat-box.red .num  { color:var(--red); }
+    .stat-box.gold .num { color:var(--gold); }
+    .stat-box.green .num{ color:var(--green); }
+
+    .tabs { display:flex; justify-content:center; gap:8px; padding:24px 20px 0; flex-wrap:wrap; position:relative; z-index:1; }
+    .tab-btn { background:var(--card-bg); border:1px solid var(--border); color:var(--text-dim); padding:10px 22px; border-radius:30px; cursor:pointer; transition:all 0.2s; font-family:'DM Sans',sans-serif; font-size:14px; font-weight:500; }
+    .tab-btn.active, .tab-btn:hover { background:var(--purple); color:white; border-color:var(--purple); box-shadow:0 0 14px rgba(124,58,237,0.3); }
+
+    .section { padding:24px 30px; max-width:1200px; margin:0 auto; position:relative; z-index:1; }
+    .section-title { font-family:'Syne',sans-serif; font-size:16px; font-weight:700; color:white; margin-bottom:16px; }
+    .search-bar { width:100%; padding:11px 16px; border-radius:10px; border:1px solid var(--border); background:var(--bg3); color:white; font-size:14px; font-family:'DM Sans',sans-serif; margin-bottom:16px; outline:none; transition:all 0.2s; }
+    .search-bar:focus { border-color:var(--purple); box-shadow:0 0 0 3px rgba(124,58,237,0.1); }
+
+    .table-wrap { background:var(--card-bg); border:1px solid var(--border); border-radius:14px; overflow:hidden; }
+    .table-inner { overflow-x:auto; }
+    table { width:100%; border-collapse:collapse; }
+    thead tr { background:rgba(124,58,237,0.08); }
+    th { padding:13px 16px; text-align:left; font-size:11px; color:var(--text-dim); text-transform:uppercase; letter-spacing:0.8px; border-bottom:1px solid var(--border); font-weight:600; }
+    td { padding:12px 16px; font-size:14px; border-bottom:1px solid rgba(255,255,255,0.04); }
+    tr:hover td { background:rgba(124,58,237,0.04); }
+    tr:last-child td { border-bottom:none; }
+    .badge-score { display:inline-block; padding:3px 10px; border-radius:8px; font-size:12px; font-weight:600; }
+    .badge-high { background:rgba(34,197,94,0.1);  color:var(--green); border:1px solid rgba(34,197,94,0.3); }
+    .badge-mid  { background:rgba(251,191,36,0.1); color:var(--gold);  border:1px solid rgba(251,191,36,0.3); }
+    .badge-low  { background:rgba(239,68,68,0.1);  color:var(--red);   border:1px solid rgba(239,68,68,0.3); }
+    .type-pill  { background:rgba(124,58,237,0.12); color:var(--purple-glow); padding:3px 10px; border-radius:6px; font-size:11px; border:1px solid var(--border); }
+
+    .charts-grid { display:grid; grid-template-columns:repeat(auto-fit,minmax(280px,1fr)); gap:16px; padding:24px 30px; position:relative; z-index:1; }
+    .chart-card { background:var(--card-bg); border:1px solid var(--border); border-radius:14px; padding:22px; }
+
+    .tab-panel { display:none; }
+    .tab-panel.active { display:block; }
+
+    footer { text-align:center; padding:30px; font-size:13px; color:var(--text-dim); border-top:1px solid var(--border); background:var(--bg2); position:relative; z-index:1; margin-top:20px; }
+    footer a { color:var(--purple-glow); text-decoration:none; }
+    @keyframes fadeUp { from{opacity:0;transform:translateY(16px)} to{opacity:1;transform:translateY(0)} }
+    @media(max-width:768px){ header{padding:0 16px;} .admin-top{padding:16px;} .section{padding:20px 16px;} .charts-grid{padding:16px;} .stats-row{padding:20px 16px 0;} }
+  </style>
+</head>
+<body>
+
+<header>
+  <div class="logo">Scam<span>Y</span></div>
+  <nav>
+    <a href="index.html">Home</a>
+    <a href="scam.html">Scams</a>
+    <a href="quiz.html">Quiz</a>
+    <a href="checker.html">Checker</a>
+    <a href="contact.html">Report</a>
+    <a href="admin.html" class="active">Admin</a>
+  </nav>
+</header>
+
+<!-- LOGIN -->
+<div class="login-wrap" id="loginSection">
+  <div class="login-card">
+    <div class="login-icon">🔐</div>
+    <h2>Admin Access</h2>
+    <p>Restricted. Enter your credentials to continue.</p>
+    <input class="login-input" type="text"     id="adminUser" placeholder="Username" autocomplete="off">
+    <input class="login-input" type="password" id="adminPass" placeholder="Password" onkeydown="if(event.key==='Enter')doLogin()">
+    <button class="login-btn" onclick="doLogin()">Login →</button>
+    <div class="login-err" id="loginErr">⚠ Invalid credentials. Try again.</div>
+  </div>
+</div>
+
+<!-- DASHBOARD -->
+<div id="dashboard">
+  <div class="admin-top">
+    <div class="admin-top-title">Scam<span>Y</span> — Admin Dashboard</div>
+    <button class="logout-btn" onclick="doLogout()">✕ Logout</button>
+  </div>
+
+  <div class="stats-row">
+    <div class="stat-box red"   style="--d:0.05s"><h4>Total Cases</h4>   <div class="num" id="sTotalCases">—</div></div>
+    <div class="stat-box gold"  style="--d:0.10s"><h4>Total Loss</h4>    <div class="num" id="sTotalLoss">—</div></div>
+    <div class="stat-box"       style="--d:0.15s"><h4>Unique Names</h4>  <div class="num" id="sTotalCustomers">—</div></div>
+    <div class="stat-box green" style="--d:0.20s"><h4>Quiz Attempts</h4> <div class="num" id="sQuizAttempts">—</div></div>
+    <div class="stat-box"       style="--d:0.25s"><h4>Avg Quiz Score</h4><div class="num" id="sAvgScore">—</div></div>
+  </div>
+
+  <div class="tabs">
+    <button class="tab-btn active" onclick="switchTab('reports',this)">📋 Reports</button>
+    <button class="tab-btn"        onclick="switchTab('quiz',this)">🧠 Quiz Scores</button>
+    <button class="tab-btn"        onclick="switchTab('analytics',this)">📊 Analytics</button>
+  </div>
+
+  <!-- REPORTS -->
+  <div class="tab-panel active" id="tab-reports">
+    <div class="section">
+      <div class="section-title">All Scam Reports</div>
+      <input class="search-bar" type="text" placeholder="🔍 Search by name, type…" oninput="filterTable('txTable',this.value)">
+      <div class="table-wrap"><div class="table-inner">
+        <table id="txTable">
+          <thead><tr><th>#</th><th>Name</th><th>Amount Lost</th><th>Scam Type</th></tr></thead>
+          <tbody id="txBody"></tbody>
+        </table>
+      </div></div>
+    </div>
+  </div>
+
+  <!-- QUIZ SCORES -->
+  <div class="tab-panel" id="tab-quiz">
+    <div class="section">
+      <div class="section-title">Quiz Scores</div>
+      <input class="search-bar" type="text" placeholder="🔍 Search by name…" oninput="filterTable('qzTable',this.value)">
+      <div class="table-wrap"><div class="table-inner">
+        <table id="qzTable">
+          <thead><tr><th>#</th><th>Name</th><th>Score</th><th>%</th><th>Rating</th></tr></thead>
+          <tbody id="qzBody"></tbody>
+        </table>
+      </div></div>
+    </div>
+  </div>
+
+  <!-- ANALYTICS -->
+  <div class="tab-panel" id="tab-analytics">
+    <div class="charts-grid">
+      <div class="chart-card"><canvas id="aBarChart"   height="220"></canvas></div>
+      <div class="chart-card"><canvas id="aPieChart"   height="220"></canvas></div>
+      <div class="chart-card"><canvas id="aScoreChart" height="220"></canvas></div>
+    </div>
+  </div>
+</div>
+
+<footer>
+  © 2026 ScamY · Scam Awareness India · Built by
+  <a href="#">Kiran, Ashwin, Harshal &amp; Siddharth</a>
+</footer>
+
+<script>
+  /* ── Supabase ────────────────────────────────────────────────────────────── */
+  const client = supabase.createClient(
+    "https://kyfjmaeybpnfoxavtlcz.supabase.co",
+    "sb_publishable_PfINMvLfU3t2TWNsSpVkdw_bs2tAqIc"
+  );
+
+  const ADMIN_CREDS = { username: 'admin', password: 'scamy2026' };
+
+  /* ── Auth ────────────────────────────────────────────────────────────────── */
+  function doLogin() {
+    const u = document.getElementById('adminUser').value.trim();
+    const p = document.getElementById('adminPass').value;
+    if (u === ADMIN_CREDS.username && p === ADMIN_CREDS.password) {
+      document.getElementById('loginSection').style.display = 'none';
+      document.getElementById('dashboard').style.display = 'block';
+      loadAdmin();
+    } else {
+      const err = document.getElementById('loginErr');
+      err.style.display = 'block';
+      setTimeout(() => err.style.display = 'none', 3000);
+    }
+  }
+
+  function doLogout() {
+    document.getElementById('loginSection').style.display = 'flex';
+    document.getElementById('dashboard').style.display = 'none';
+    document.getElementById('adminUser').value = '';
+    document.getElementById('adminPass').value = '';
+  }
+
+  /* ── Tabs ────────────────────────────────────────────────────────────────── */
+  function switchTab(name, btn) {
+    document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
+    document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+    document.getElementById('tab-' + name).classList.add('active');
+    btn.classList.add('active');
+  }
+
+  /* ── Search filter ───────────────────────────────────────────────────────── */
+  function filterTable(tableId, query) {
+    const q = query.toLowerCase();
+    document.getElementById(tableId).querySelectorAll('tbody tr').forEach(r => {
+      r.style.display = r.textContent.toLowerCase().includes(q) ? '' : 'none';
+    });
+  }
+
+  /* ── Animated counter ────────────────────────────────────────────────────── */
+  function animNum(id, val, prefix = '') {
+    const el = document.getElementById(id);
+    if (!el) return;
+    let cur = 0;
+    const step = Math.max(1, val / 60);
+    const timer = setInterval(() => {
+      cur += step;
+      if (cur >= val) { cur = val; clearInterval(timer); }
+      el.textContent = prefix + Math.floor(cur).toLocaleString('en-IN');
+    }, 16);
+  }
+
+  let aBar, aPie, aScore;
+
+  /* ── Main loader ─────────────────────────────────────────────────────────── */
+  async function loadAdmin() {
+
+    /* reports table: id, name, amount, type */
+    const { data: reports, error: rErr } = await client
+      .from('reports')
+      .select('id, name, amount, type');
+    if (rErr) console.error('reports:', rErr.message);
+    const rArr = reports || [];
+
+    /* quiz table: id, name, score, total */
+    const { data: quizRows, error: qErr } = await client
+      .from('quiz')
+      .select('id, name, score, total');
+    if (qErr) console.error('quiz:', qErr.message);
+    const qArr = quizRows || [];
+
+    /* ── Stat cards ──────────────────────────────────────────────────────── */
+    animNum('sTotalCases', rArr.length);
+
+    const totalLoss = rArr.reduce((sum, r) => sum + (Number(r.amount) || 0), 0);
+    animNum('sTotalLoss', totalLoss, '₹');
+
+    const uniqueNames = new Set(
+      rArr.map(r => (r.name || '').trim().toLowerCase()).filter(Boolean)
+    );
+    animNum('sTotalCustomers', uniqueNames.size);
+
+    animNum('sQuizAttempts', qArr.length);
+
+    const avgPct = qArr.length
+      ? Math.round(
+          qArr.reduce((sum, q) => sum + (q.total ? (q.score / q.total) * 100 : 0), 0)
+          / qArr.length
+        )
+      : 0;
+    document.getElementById('sAvgScore').textContent = avgPct + '%';
+
+    /* ── Reports table ───────────────────────────────────────────────────── */
+    const txBody = document.getElementById('txBody');
+    txBody.innerHTML = rArr.length === 0
+      ? `<tr><td colspan="4" style="text-align:center;color:var(--text-dim);padding:30px;">No reports yet.</td></tr>`
+      : rArr.map((r, i) => `
+          <tr>
+            <td style="color:var(--text-dim)">${i + 1}</td>
+            <td><b>${r.name || '—'}</b></td>
+            <td style="color:var(--red);font-weight:700;font-family:'Syne',sans-serif;">
+              ₹${(Number(r.amount) || 0).toLocaleString('en-IN')}
+            </td>
+            <td><span class="type-pill">${r.type || '—'}</span></td>
+          </tr>`).join('');
+
+    /* ── Quiz table ──────────────────────────────────────────────────────── */
+    const qzBody = document.getElementById('qzBody');
+    qzBody.innerHTML = qArr.length === 0
+      ? `<tr><td colspan="5" style="text-align:center;color:var(--text-dim);padding:30px;">No quiz entries yet.</td></tr>`
+      : qArr.map((q, i) => {
+          const pct = q.total ? Math.round((q.score / q.total) * 100) : 0;
+          const [cls, rating] = pct >= 70
+            ? ['badge-high', '✅ Smart']
+            : pct >= 50
+            ? ['badge-mid',  '📚 Learning']
+            : ['badge-low',  '⚠️ At Risk'];
+          return `
+          <tr>
+            <td style="color:var(--text-dim)">${i + 1}</td>
+            <td><b>${q.name || '—'}</b></td>
+            <td><span class="badge-score ${cls}">${q.score ?? 0}/${q.total ?? 10}</span></td>
+            <td style="font-weight:700;">${pct}%</td>
+            <td>${rating}</td>
+          </tr>`;
+        }).join('');
+
+    /* ── Charts ──────────────────────────────────────────────────────────── */
+    const cGrid = { color: 'rgba(124,58,237,0.15)' };
+
+    // Count by scam type (reports.type)
+    const typeCounts = {};
+    rArr.forEach(r => {
+      const t = r.type || 'Unknown';
+      typeCounts[t] = (typeCounts[t] || 0) + 1;
+    });
+    const typeLabels = Object.keys(typeCounts);
+    const typeVals   = Object.values(typeCounts);
+
+    if (aBar) aBar.destroy();
+    aBar = new Chart(document.getElementById('aBarChart'), {
+      type: 'bar',
+      data: {
+        labels: typeLabels,
+        datasets: [{ label: 'Cases', data: typeVals,
+          backgroundColor: ['#7c3aed','#a855f7','#c084fc','#e040fb','#ef4444'],
+          borderRadius: 8 }]
+      },
+      options: { responsive: true,
+        plugins: { legend:{labels:{color:'#ede9fe'}}, title:{display:true,text:'Scam Types',color:'#c084fc'} },
+        scales: { x:{ticks:{color:'#9178b5'},grid:cGrid}, y:{ticks:{color:'#9178b5'},grid:cGrid,beginAtZero:true} }
+      }
+    });
+
+    if (aPie) aPie.destroy();
+    aPie = new Chart(document.getElementById('aPieChart'), {
+      type: 'doughnut',
+      data: {
+        labels: typeLabels,
+        datasets: [{ data: typeVals,
+          backgroundColor: ['#7c3aed','#a855f7','#ef4444','#fbbf24','#22c55e'],
+          borderColor: '#060408', borderWidth: 3 }]
+      },
+      options: { responsive: true,
+        plugins: { legend:{labels:{color:'#ede9fe'}}, title:{display:true,text:'Distribution',color:'#c084fc'} }
+      }
+    });
+
+    // Quiz score distribution
+    const sg = { '0–40%': 0, '41–70%': 0, '71–100%': 0 };
+    qArr.forEach(q => {
+      const p = q.total ? Math.round((q.score / q.total) * 100) : 0;
+      if (p <= 40) sg['0–40%']++;
+      else if (p <= 70) sg['41–70%']++;
+      else sg['71–100%']++;
+    });
+
+    if (aScore) aScore.destroy();
+    aScore = new Chart(document.getElementById('aScoreChart'), {
+      type: 'bar',
+      data: {
+        labels: Object.keys(sg),
+        datasets: [{ label: 'Students', data: Object.values(sg),
+          backgroundColor: ['#ef4444','#f97316','#22c55e'], borderRadius: 8 }]
+      },
+      options: { responsive: true,
+        plugins: { legend:{labels:{color:'#ede9fe'}}, title:{display:true,text:'Quiz Score Distribution',color:'#c084fc'} },
+        scales: { x:{ticks:{color:'#9178b5'},grid:cGrid}, y:{ticks:{color:'#9178b5'},grid:cGrid,beginAtZero:true} }
+      }
+    });
+  }
+</script>
+</body>
+</html>
