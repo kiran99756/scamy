@@ -6,12 +6,6 @@
   <title>ScamY – Quiz</title>
   <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
-  <script>
-    const client = supabase.createClient(
-      "https://kyfjmaeybpnfoxavtlcz.supabase.co",
-      "sb_publishable_PfINMvLfU3t2TWNsSpVkdw_bs2tAqIc"
-    );
-  </script>
   <style>
     :root {
       --bg: #060408; --bg2: #0e060f; --bg3: #170a1a;
@@ -144,6 +138,12 @@
 <button id="topBtn" onclick="window.scrollTo({top:0,behavior:'smooth'})">↑</button>
 
 <script>
+  /* ── Supabase Client ─────────────────────────────────────────────────────── */
+  const client = supabase.createClient(
+    "https://kyfjmaeybpnfoxavtlcz.supabase.co",
+    "sb_publishable_PfINMvLfU3t2TWNsSpVkdw_bs2tAqIc"
+  );
+
   /* ── Questions ───────────────────────────────────────────────────────────── */
   const allQuestions = {
     en: [
