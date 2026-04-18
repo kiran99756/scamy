@@ -76,6 +76,8 @@
     .badge-mid  { background:rgba(251,191,36,0.1); color:var(--gold);  border:1px solid rgba(251,191,36,0.3); }
     .badge-low  { background:rgba(239,68,68,0.1);  color:var(--red);   border:1px solid rgba(239,68,68,0.3); }
     .type-pill  { background:rgba(124,58,237,0.12); color:var(--purple-glow); padding:3px 10px; border-radius:6px; font-size:11px; border:1px solid var(--border); }
+    .btn-delete { background:rgba(239,68,68,0.12); border:1px solid rgba(239,68,68,0.35); color:#ef4444; padding:5px 14px; border-radius:8px; cursor:pointer; font-size:12px; font-family:'DM Sans',sans-serif; transition:background 0.2s; white-space:nowrap; }
+    .btn-delete:hover { background:rgba(239,68,68,0.28); }
 
     .charts-grid { display:grid; grid-template-columns:repeat(auto-fit,minmax(280px,1fr)); gap:16px; padding:24px 30px; position:relative; z-index:1; }
     .chart-card { background:var(--card-bg); border:1px solid var(--border); border-radius:14px; padding:22px; }
@@ -140,11 +142,14 @@
   <!-- REPORTS -->
   <div class="tab-panel active" id="tab-reports">
     <div class="section">
-      <div class="section-title">All Scam Reports</div>
+      <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px;margin-bottom:16px;">
+        <div class="section-title" style="margin-bottom:0;">All Scam Reports</div>
+        <button onclick="openAddModal()" style="background:linear-gradient(135deg,var(--purple),var(--accent));border:none;color:white;padding:9px 20px;border-radius:10px;cursor:pointer;font-family:'Syne',sans-serif;font-weight:700;font-size:13px;transition:opacity 0.2s;" onmouseover="this.style.opacity='0.85'" onmouseout="this.style.opacity='1'">+ Add Report</button>
+      </div>
       <input class="search-bar" type="text" placeholder="🔍 Search by name, type…" oninput="filterTable('txTable',this.value)">
       <div class="table-wrap"><div class="table-inner">
         <table id="txTable">
-          <thead><tr><th>#</th><th>Name</th><th>Amount Lost</th><th>Scam Type</th></tr></thead>
+          <thead><tr><th>#</th><th>Name</th><th>Amount Lost</th><th>Scam Type</th><th>Action</th></tr></thead>
           <tbody id="txBody"></tbody>
         </table>
       </div></div>
@@ -158,7 +163,7 @@
       <input class="search-bar" type="text" placeholder="🔍 Search by name…" oninput="filterTable('qzTable',this.value)">
       <div class="table-wrap"><div class="table-inner">
         <table id="qzTable">
-          <thead><tr><th>#</th><th>Name</th><th>Score</th><th>%</th><th>Rating</th></tr></thead>
+          <thead><tr><th>#</th><th>Name</th><th>Score</th><th>%</th><th>Rating</th><th>Action</th></tr></thead>
           <tbody id="qzBody"></tbody>
         </table>
       </div></div>
@@ -179,6 +184,43 @@
   © 2026 ScamY · Scam Awareness India · Built by
   <a href="#">Kiran, Ashwin, Harshal &amp; Siddharth</a>
 </footer>
+
+<!-- ADD REPORT MODAL -->
+<div id="addModal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.7);z-index:999;align-items:center;justify-content:center;backdrop-filter:blur(6px);">
+  <div style="background:#170a1a;border:1px solid rgba(124,58,237,0.4);border-radius:20px;padding:32px;width:90%;max-width:420px;position:relative;">
+    <div style="font-family:'Syne',sans-serif;font-size:20px;font-weight:800;color:white;margin-bottom:24px;">➕ Add Report</div>
+
+    <div style="margin-bottom:16px;">
+      <label style="font-size:11px;color:var(--text-dim);text-transform:uppercase;letter-spacing:1px;display:block;margin-bottom:6px;">Name</label>
+      <input id="add_name" type="text" placeholder="Victim name" style="width:100%;background:rgba(124,58,237,0.08);border:1px solid rgba(124,58,237,0.3);color:white;padding:10px 14px;border-radius:10px;font-size:14px;outline:none;">
+    </div>
+
+    <div style="margin-bottom:16px;">
+      <label style="font-size:11px;color:var(--text-dim);text-transform:uppercase;letter-spacing:1px;display:block;margin-bottom:6px;">Amount Lost (₹)</label>
+      <input id="add_amount" type="number" placeholder="e.g. 5000" style="width:100%;background:rgba(124,58,237,0.08);border:1px solid rgba(124,58,237,0.3);color:white;padding:10px 14px;border-radius:10px;font-size:14px;outline:none;">
+    </div>
+
+    <div style="margin-bottom:24px;">
+      <label style="font-size:11px;color:var(--text-dim);text-transform:uppercase;letter-spacing:1px;display:block;margin-bottom:6px;">Scam Type</label>
+      <select id="add_type" style="width:100%;background:#170a1a;border:1px solid rgba(124,58,237,0.3);color:white;padding:10px 14px;border-radius:10px;font-size:14px;outline:none;">
+        <option value="">Select type…</option>
+        <option>UPI Scam</option>
+        <option>OTP Scam</option>
+        <option>Call Scam</option>
+        <option>Digital Arrest</option>
+        <option>Phishing</option>
+        <option>Fake App</option>
+      </select>
+    </div>
+
+    <div id="add_err" style="display:none;color:#ef4444;font-size:13px;margin-bottom:14px;"></div>
+
+    <div style="display:flex;gap:12px;">
+      <button onclick="submitAddReport()" style="flex:1;background:linear-gradient(135deg,var(--purple),var(--accent));border:none;color:white;padding:12px;border-radius:10px;cursor:pointer;font-family:'Syne',sans-serif;font-weight:700;font-size:14px;">Save</button>
+      <button onclick="closeAddModal()" style="flex:1;background:rgba(255,255,255,0.05);border:1px solid var(--border);color:var(--text-dim);padding:12px;border-radius:10px;cursor:pointer;font-size:14px;">Cancel</button>
+    </div>
+  </div>
+</div>
 
 <script>
   /* ── Supabase ────────────────────────────────────────────────────────────── */
@@ -293,7 +335,7 @@
     if (firstLoad) {
       let cur = 0;
       const step = Math.max(1, avgPct / 60);
-      const timer = setInterval(() => {
+ const timer = setInterval(() => {
         cur += step;
         if (cur >= avgPct) { cur = avgPct; clearInterval(timer); }
         avgEl.textContent = Math.floor(cur) + '%';
@@ -305,7 +347,7 @@
     /* ── Reports table ───────────────────────────────────────────────────── */
     const txBody = document.getElementById('txBody');
     txBody.innerHTML = rArr.length === 0
-      ? `<tr><td colspan="4" style="text-align:center;color:var(--text-dim);padding:30px;">No reports yet.</td></tr>`
+      ? `<tr><td colspan="5" style="text-align:center;color:var(--text-dim);padding:30px;">No reports yet.</td></tr>`
       : rArr.map((r, i) => `
           <tr>
             <td style="color:var(--text-dim)">${i + 1}</td>
@@ -314,12 +356,13 @@
               ₹${(Number(r.amount) || 0).toLocaleString('en-IN')}
             </td>
             <td><span class="type-pill">${r.type || '—'}</span></td>
+            <td><button class="btn-delete" onclick="deleteReport(${r.id})">🗑 Delete</button></td>
           </tr>`).join('');
 
     /* ── Quiz table ──────────────────────────────────────────────────────── */
     const qzBody = document.getElementById('qzBody');
     qzBody.innerHTML = qArr.length === 0
-      ? `<tr><td colspan="5" style="text-align:center;color:var(--text-dim);padding:30px;">No quiz entries yet.</td></tr>`
+      ? `<tr><td colspan="6" style="text-align:center;color:var(--text-dim);padding:30px;">No quiz entries yet.</td></tr>`
       : qArr.map((q, i) => {
           const pct = q.total ? Math.round((q.score / q.total) * 100) : 0;
           const [cls, rating] = pct >= 70
@@ -334,6 +377,7 @@
             <td><span class="badge-score ${cls}">${q.score ?? 0}/${q.total ?? 10}</span></td>
             <td style="font-weight:700;">${pct}%</td>
             <td>${rating}</td>
+            <td><button class="btn-delete" onclick="deleteQuiz(${q.id})">🗑 Delete</button></td>
           </tr>`;
         }).join('');
 
@@ -402,6 +446,61 @@
     });
     firstLoad = false;
   }
+
+  /* ── Delete report ───────────────────────────────────────────────────────── */
+  async function deleteReport(id) {
+    if (!confirm('Delete this report? This cannot be undone.')) return;
+    const { error } = await client.from('reports').delete().eq('id', id);
+    if (error) { alert('Error: ' + error.message); return; }
+    loadAdmin();
+  }
+
+  /* ── Delete quiz ─────────────────────────────────────────────────────────── */
+  async function deleteQuiz(id) {
+    if (!confirm('Delete this quiz entry? This cannot be undone.')) return;
+    const { error } = await client.from('quiz').delete().eq('id', id);
+    if (error) { alert('Error: ' + error.message); return; }
+    loadAdmin();
+  }
+
+  /* ── Add report modal ────────────────────────────────────────────────────── */
+  function openAddModal() {
+    document.getElementById('add_name').value = '';
+    document.getElementById('add_amount').value = '';
+    document.getElementById('add_type').value = '';
+    document.getElementById('add_err').style.display = 'none';
+    document.getElementById('addModal').style.display = 'flex';
+  }
+
+  function closeAddModal() {
+    document.getElementById('addModal').style.display = 'none';
+  }
+
+  async function submitAddReport() {
+    const name   = document.getElementById('add_name').value.trim();
+    const amount = Number(document.getElementById('add_amount').value);
+    const type   = document.getElementById('add_type').value;
+    const errEl  = document.getElementById('add_err');
+
+    if (!name || !amount || !type) {
+      errEl.textContent = '⚠️ Please fill all fields.';
+      errEl.style.display = 'block'; return;
+    }
+
+    const { error } = await client.from('reports').insert({ name, amount, type });
+    if (error) {
+      errEl.textContent = '❌ ' + error.message;
+      errEl.style.display = 'block'; return;
+    }
+
+    closeAddModal();
+    loadAdmin();
+  }
+
+  // Close modal on backdrop click
+  document.getElementById('addModal').addEventListener('click', function(e) {
+    if (e.target === this) closeAddModal();
+  });
 </script>
 </body>
 </html>
