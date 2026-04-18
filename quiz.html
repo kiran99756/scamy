@@ -1,0 +1,312 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>ScamY – Quiz</title>
+  <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
+  <script>
+    const client = supabase.createClient(
+      "https://kyfjmaeybpnfoxavtlcz.supabase.co",
+      "sb_publishable_PfINMvLfU3t2TWNsSpVkdw_bs2tAqIc"
+    );
+  </script>
+  <style>
+    :root {
+      --bg: #060408; --bg2: #0e060f; --bg3: #170a1a;
+      --purple: #7c3aed; --purple-light: #a855f7; --purple-glow: #c084fc;
+      --accent: #e040fb; --text: #ede9fe; --text-dim: #9178b5;
+      --border: rgba(124,58,237,0.3); --card-bg: rgba(23,10,26,0.9);
+      --red: #ef4444; --green: #22c55e; --gold: #fbbf24;
+    }
+    * { margin:0; padding:0; box-sizing:border-box; }
+    body { background:var(--bg); color:var(--text); font-family:'DM Sans',sans-serif; min-height:100vh; overflow-x:hidden; }
+    body::before { content:''; position:fixed; inset:0; background-image:url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.04'/%3E%3C/svg%3E"); pointer-events:none; z-index:0; opacity:0.4; }
+
+    header { position:sticky; top:0; z-index:100; background:rgba(6,4,8,0.92); backdrop-filter:blur(20px); border-bottom:1px solid var(--border); padding:0 30px; display:flex; align-items:center; justify-content:space-between; height:64px; }
+    .logo { font-family:'Syne',sans-serif; font-size:22px; font-weight:800; color:white; letter-spacing:-0.5px; }
+    .logo span { color:var(--accent); }
+    nav { display:flex; gap:4px; align-items:center; }
+    nav a { color:var(--text-dim); text-decoration:none; padding:7px 14px; border-radius:8px; font-size:14px; font-weight:500; transition:all 0.2s; }
+    nav a:hover, nav a.active { color:white; background:var(--bg3); }
+
+    .lang-bar { display:flex; justify-content:flex-end; gap:6px; padding:8px 30px; background:var(--bg2); border-bottom:1px solid var(--border); position:relative; z-index:10; }
+    .lang-btn { background:transparent; color:var(--text-dim); border:1px solid var(--border); padding:4px 12px; border-radius:20px; cursor:pointer; font-size:12px; font-family:'DM Sans',sans-serif; transition:all 0.2s; }
+    .lang-btn:hover, .lang-btn.active { background:var(--purple); color:white; border-color:var(--purple); box-shadow:0 0 10px rgba(124,58,237,0.4); }
+
+    .page-hero { position:relative; z-index:1; text-align:center; padding:50px 30px 30px; background:radial-gradient(ellipse 70% 50% at 50% 0%, rgba(124,58,237,0.12) 0%, transparent 70%); }
+    .page-hero h1 { font-family:'Syne',sans-serif; font-size:clamp(24px,4vw,40px); font-weight:800; letter-spacing:-0.5px; margin-bottom:10px; }
+    .page-hero h1 em { font-style:normal; color:var(--accent); }
+    .page-hero p { color:var(--text-dim); font-size:15px; max-width:500px; margin:0 auto; line-height:1.6; }
+
+    .score-bar { position:sticky; top:64px; z-index:90; background:rgba(6,4,8,0.95); backdrop-filter:blur(10px); border-bottom:1px solid var(--border); padding:12px 30px; display:flex; justify-content:space-between; align-items:center; }
+    .player-label { font-size:13px; color:var(--text-dim); }
+    .score-display { font-family:'Syne',sans-serif; font-size:16px; font-weight:700; color:var(--purple-glow); }
+
+    .name-section { max-width:480px; margin:40px auto; padding:36px; background:var(--card-bg); border:1px solid var(--border); border-radius:18px; text-align:center; position:relative; z-index:1; animation:fadeUp 0.6s ease both; }
+    .name-section h2 { font-family:'Syne',sans-serif; font-size:20px; font-weight:700; color:white; margin-bottom:8px; }
+    .name-section p { color:var(--text-dim); font-size:13px; margin-bottom:24px; }
+    .name-input { width:100%; padding:13px 16px; border-radius:10px; border:1px solid var(--border); background:var(--bg3); color:white; font-size:15px; font-family:'DM Sans',sans-serif; margin-bottom:14px; transition:all 0.2s; outline:none; }
+    .name-input:focus { border-color:var(--purple); box-shadow:0 0 0 3px rgba(124,58,237,0.15); }
+    .start-btn { width:100%; background:var(--purple); color:white; border:none; padding:13px; border-radius:10px; cursor:pointer; font-size:15px; font-family:'DM Sans',sans-serif; font-weight:600; transition:all 0.2s; }
+    .start-btn:hover { background:var(--purple-light); box-shadow:0 0 20px rgba(124,58,237,0.4); transform:translateY(-1px); }
+
+    .quiz-container { padding:30px; max-width:800px; margin:0 auto; position:relative; z-index:1; }
+    .quiz-container h2 { font-family:'Syne',sans-serif; font-size:20px; font-weight:700; margin-bottom:24px; }
+    .question { background:var(--card-bg); margin:0 0 16px; padding:22px; border-radius:14px; border:1px solid var(--border); animation:fadeUp 0.5s ease both; animation-delay:var(--d,0s); }
+    .question p { font-size:15px; font-weight:600; color:white; margin-bottom:14px; }
+    .options { display:flex; flex-direction:column; gap:8px; }
+    .option { background:var(--bg3); padding:11px 16px; border-radius:9px; border:1px solid var(--border); color:var(--text); cursor:pointer; transition:all 0.2s; text-align:left; font-family:'DM Sans',sans-serif; font-size:14px; }
+    .option:hover:not(.answered) { border-color:var(--purple); background:rgba(124,58,237,0.1); transform:translateX(4px); }
+    .option.answered { cursor:not-allowed; }
+    .option.correct { background:rgba(34,197,94,0.1) !important; border-color:var(--green) !important; color:var(--green); }
+    .option.wrong   { background:rgba(239,68,68,0.1)  !important; border-color:var(--red)   !important; color:var(--red); }
+
+    .result-card { max-width:480px; margin:40px auto; padding:36px; background:var(--card-bg); border:1px solid var(--purple); border-radius:20px; text-align:center; position:relative; z-index:1; display:none; animation:popIn 0.6s cubic-bezier(0.34,1.56,0.64,1) both; box-shadow:0 0 50px rgba(124,58,237,0.2); }
+    @keyframes popIn { from{opacity:0;transform:scale(0.8)} to{opacity:1;transform:scale(1)} }
+    .result-score { font-family:'Syne',sans-serif; font-size:60px; font-weight:800; color:var(--gold); margin:16px 0; text-shadow:0 0 24px rgba(251,191,36,0.5); }
+    .result-msg   { font-size:15px; color:var(--text-dim); margin-bottom:18px; line-height:1.5; }
+    .result-badge { display:inline-block; padding:8px 22px; border-radius:30px; font-weight:600; font-size:14px; margin-bottom:20px; }
+    .saved-note   { font-size:13px; color:var(--text-dim); margin-top:12px; }
+    .retry-btn { background:var(--purple); color:white; border:none; padding:12px 30px; border-radius:10px; cursor:pointer; font-size:15px; font-family:'DM Sans',sans-serif; font-weight:500; transition:all 0.2s; margin-top:12px; }
+    .retry-btn:hover { background:var(--purple-light); box-shadow:0 0 20px rgba(124,58,237,0.4); }
+
+    footer { text-align:center; padding:30px; font-size:13px; color:var(--text-dim); border-top:1px solid var(--border); background:var(--bg2); position:relative; z-index:1; }
+    footer a { color:var(--purple-glow); text-decoration:none; }
+    #topBtn { display:none; position:fixed; bottom:28px; right:28px; z-index:50; background:var(--purple); color:white; border:none; width:44px; height:44px; border-radius:50%; cursor:pointer; font-size:18px; box-shadow:0 0 20px rgba(124,58,237,0.5); transition:all 0.3s; }
+    #topBtn:hover { background:var(--purple-light); transform:translateY(-3px); }
+    @keyframes fadeUp { from{opacity:0;transform:translateY(20px)} to{opacity:1;transform:translateY(0)} }
+    @media(max-width:768px){ header{padding:0 16px;} .lang-bar{padding:8px 16px;} .quiz-container{padding:20px 16px;} }
+  </style>
+</head>
+<body>
+
+<header>
+  <div class="logo">Scam<span>Y</span></div>
+  <nav>
+    <a href="index.html"   data-key="nav_main">Home</a>
+    <a href="scam.html"    data-key="nav_scams">Scams</a>
+    <a href="quiz.html"    class="active" data-key="nav_quiz">Quiz</a>
+    <a href="checker.html" data-key="nav_checker">Checker</a>
+    <a href="contact.html" data-key="nav_contact">Report</a>
+  </nav>
+</header>
+
+<div class="lang-bar">
+  <button class="lang-btn active" onclick="setLang('en',this)">🇬🇧 English</button>
+  <button class="lang-btn"        onclick="setLang('hi',this)">🇮🇳 हिन्दी</button>
+  <button class="lang-btn"        onclick="setLang('mr',this)">🇮🇳 मराठी</button>
+</div>
+
+<div class="page-hero">
+  <h1>Scam Awareness <em>Quiz</em></h1>
+  <p>Test your knowledge. 10 questions. Find out if you'd survive a scam attempt.</p>
+</div>
+
+<!-- Name Entry -->
+<div class="name-section" id="nameSection">
+  <h2 data-key="enter_name">Enter Your Name to Start</h2>
+  <p>Your score will be saved to the leaderboard.</p>
+  <input class="name-input" id="playerName" type="text" placeholder="Your full name…" maxlength="50"
+         onkeydown="if(event.key==='Enter')startQuiz()">
+  <button class="start-btn" onclick="startQuiz()" data-key="start_btn">🚀 Start Quiz</button>
+</div>
+
+<!-- Score Bar -->
+<div class="score-bar" id="scoreBar" style="display:none;">
+  <div class="player-label">👤 <span id="displayName">—</span></div>
+  <div class="score-display" id="scoreDisplay">Score: 0 / 0</div>
+</div>
+
+<!-- Quiz -->
+<div class="quiz-container" id="quizContainer" style="display:none;">
+  <h2 data-key="quiz_title">Scam Awareness Quiz</h2>
+  <div id="quiz"></div>
+</div>
+
+<!-- Result -->
+<div class="result-card" id="resultCard">
+  <div style="font-size:40px;margin-bottom:8px;">🏆</div>
+  <div style="font-family:'Syne',sans-serif;font-size:14px;color:var(--text-dim);text-transform:uppercase;letter-spacing:1px;">Your Score</div>
+  <div class="result-score" id="finalScore">0/10</div>
+  <div class="result-badge" id="resultBadge">—</div>
+  <div class="result-msg"   id="resultMsg"></div>
+  <div class="saved-note"   id="savedNote"></div>
+  <button class="retry-btn" onclick="location.reload()">↺ Try Again</button>
+</div>
+
+<footer>
+  © 2026 ScamY · Scam Awareness India · Built by
+  <a href="#">Kiran, Ashwin, Harshal &amp; Siddharth</a> ·
+  Emergency Helpline: <strong style="color:var(--accent)">1930</strong>
+</footer>
+<button id="topBtn" onclick="window.scrollTo({top:0,behavior:'smooth'})">↑</button>
+
+<script>
+  /* ── Questions ───────────────────────────────────────────────────────────── */
+  const allQuestions = {
+    en: [
+      {q:"You receive a UPI request from an unknown number. What do you do?",options:["Accept it","Decline and block","Accept if small amount"],correct:1},
+      {q:"A 'bank employee' calls asking for your OTP. What do you do?",options:["Give the OTP","Hang up and call the bank directly","Verify them first"],correct:1},
+      {q:"WhatsApp message: 'Get ₹10,000 free — Click here'. What do you do?",options:["Click immediately","Ignore and delete","Forward to friends"],correct:1},
+      {q:"Scanning a QR code can receive money — True or False?",options:["True","False — scanning can only send money","Only on trusted apps"],correct:1},
+      {q:"You should NEVER share these with anyone:",options:["Your name","UPI PIN / OTP / CVV","Your email address"],correct:1},
+      {q:"You receive an APK file from 'SBI' on WhatsApp. What do you do?",options:["Install it","Delete it immediately","Install only if it looks official"],correct:1},
+      {q:"A caller says you won ₹50,000 but need to pay ₹500 processing fee.",options:["Pay the fee","It's a scam — hang up","Ask for proof first"],correct:1},
+      {q:"You're asked to install a screen-sharing app for a 'refund'. What do you do?",options:["Install it","Refuse — it's a scam","Only if refund is large"],correct:1},
+      {q:"What does 2FA protect against?",options:["Slow internet","Unauthorized account access","Battery drain"],correct:1},
+      {q:"India's cybercrime helpline number:",options:["100","1930","112"],correct:1}
+    ],
+    hi: [
+      {q:"अनजान नंबर से UPI अनुरोध आया। क्या करें?",options:["स्वीकार करें","अस्वीकार करें और ब्लॉक करें","छोटी राशि हो तो स्वीकारें"],correct:1},
+      {q:"बैंक कर्मचारी OTP मांग रहा है। क्या करें?",options:["OTP दें","फोन काटें और सीधे बैंक कॉल करें","पहले उन्हें सत्यापित करें"],correct:1},
+      {q:"WhatsApp: '₹10,000 मुफ्त पाएं — यहाँ क्लिक करें'। क्या करें?",options:["तुरंत क्लिक करें","अनदेखा करें और डिलीट करें","दोस्तों को फॉरवर्ड करें"],correct:1},
+      {q:"QR कोड स्कैन करके पैसे मिलते हैं — सच या झूठ?",options:["हाँ, सच","नहीं, स्कैन से पैसे कट सकते हैं","सिर्फ भरोसेमंद ऐप पर सुरक्षित"],correct:1},
+      {q:"ये कभी किसी से साझा न करें:",options:["नाम","UPI PIN / OTP","ईमेल"],correct:1},
+      {q:"WhatsApp पर SBI का APK फ़ाइल मिला। क्या करें?",options:["इंस्टॉल करें","तुरंत डिलीट करें","अगर असली लगे तो इंस्टॉल करें"],correct:1},
+      {q:"कॉलर कहता है आप ₹50,000 जीते, ₹500 प्रोसेसिंग फीस चाहिए।",options:["फीस दें","घोटाला है — फोन काटें","पहले सबूत माँगें"],correct:1},
+      {q:"'रिफंड' के लिए स्क्रीन-शेयर ऐप इंस्टॉल करने को कहा जाए तो?",options:["इंस्टॉल करें","मना करें — घोटाला है","बड़ी राशि हो तो ही"],correct:1},
+      {q:"2FA किससे बचाता है?",options:["धीमी इंटरनेट","अनाधिकृत पहुँच","बैटरी ड्रेन"],correct:1},
+      {q:"भारत में साइबर क्राइम हेल्पलाइन नंबर:",options:["100","1930","112"],correct:1}
+    ],
+    mr: [
+      {q:"अनोळखी नंबरवरून UPI विनंती आली. काय कराल?",options:["स्वीकार करा","नाकारा आणि ब्लॉक करा","लहान रक्कम असल्यास स्वीकारा"],correct:1},
+      {q:"बँक कर्मचारी OTP मागत आहे. काय कराल?",options:["OTP द्या","फोन कट करा व बँकेला थेट कॉल करा","आधी त्यांची ओळख पडताळा"],correct:1},
+      {q:"WhatsApp: '₹10,000 मोफत मिळवा — येथे क्लिक करा'. काय कराल?",options:["लगेच क्लिक करा","दुर्लक्ष करा आणि डिलीट करा","मित्रांना फॉरवर्ड करा"],correct:1},
+      {q:"QR कोड स्कॅन केल्याने पैसे मिळतात का?",options:["हो, मिळतात","नाही, स्कॅनमुळे पैसे कापले जाऊ शकतात","फक्त विश्वासू ॲपवर"],correct:1},
+      {q:"हे कधीही कोणाशी शेअर करू नका:",options:["नाव","UPI PIN / OTP","ईमेल"],correct:1},
+      {q:"WhatsApp वर SBI चा APK फाइल आला. काय कराल?",options:["इन्स्टॉल करा","लगेच डिलीट करा","अधिकृत वाटल्यास इन्स्टॉल करा"],correct:1},
+      {q:"कॉलर म्हणतो तुम्ही ₹50,000 जिंकले, ₹500 फी द्या.",options:["फी द्या","फसवणूक आहे — फोन कट करा","आधी पुरावा मागा"],correct:1},
+      {q:"'रिफंड' साठी स्क्रीन-शेअर ॲप इन्स्टॉल करायला सांगितले तर?",options:["इन्स्टॉल करा","नाकारा — फसवणूक आहे","मोठी रक्कम असल्यासच"],correct:1},
+      {q:"2FA कशापासून संरक्षण करते?",options:["मंद इंटरनेट","अनधिकृत प्रवेश","बॅटरी ड्रेन"],correct:1},
+      {q:"भारतातील सायबर गुन्हे हेल्पलाइन नंबर:",options:["100","1930","112"],correct:1}
+    ]
+  };
+
+  /* ── UI translations ─────────────────────────────────────────────────────── */
+  const uiTrans = {
+    en: { nav_main:"Home", nav_scams:"Scams", nav_quiz:"Quiz", nav_checker:"Checker", nav_contact:"Report", quiz_title:"Scam Awareness Quiz", enter_name:"Enter Your Name to Start", start_btn:"🚀 Start Quiz" },
+    hi: { nav_main:"होम", nav_scams:"घोटाले", nav_quiz:"क्विज़", nav_checker:"जाँचकर्ता", nav_contact:"रिपोर्ट", quiz_title:"घोटाला जागरूकता क्विज़", enter_name:"शुरू करने के लिए अपना नाम दर्ज करें", start_btn:"🚀 क्विज़ शुरू करें" },
+    mr: { nav_main:"मुख्य", nav_scams:"फसवणूक", nav_quiz:"प्रश्नमंजुषा", nav_checker:"तपासक", nav_contact:"रिपोर्ट", quiz_title:"फसवणूक जागरूकता प्रश्नमंजुषा", enter_name:"सुरू करण्यासाठी नाव टाका", start_btn:"🚀 प्रश्नमंजुषा सुरू करा" }
+  };
+
+  let currentLang = 'en', playerName = '', score = 0, totalAnswered = 0;
+  const TOTAL_Q = 10;
+
+  /* ── Language switcher ───────────────────────────────────────────────────── */
+  function setLang(lang, btn) {
+    currentLang = lang;
+    const t = uiTrans[lang];
+    document.querySelectorAll('[data-key]').forEach(el => {
+      const k = el.getAttribute('data-key');
+      if (t[k] !== undefined) el.textContent = t[k];
+    });
+    document.querySelectorAll('.lang-btn').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+  }
+
+  /* ── Start quiz ──────────────────────────────────────────────────────────── */
+  function startQuiz() {
+    const n = document.getElementById('playerName').value.trim();
+    if (!n) { alert('Please enter your name to start!'); return; }
+    playerName = n;
+    document.getElementById('nameSection').style.display    = 'none';
+    document.getElementById('scoreBar').style.display       = 'flex';
+    document.getElementById('quizContainer').style.display  = 'block';
+    document.getElementById('displayName').textContent      = n;
+    buildQuiz(currentLang);
+  }
+
+  /* ── Build questions ─────────────────────────────────────────────────────── */
+  function buildQuiz(lang) {
+    score = 0; totalAnswered = 0;
+    updateScoreDisplay();
+    const qDiv = document.getElementById('quiz');
+    qDiv.innerHTML = '';
+
+    allQuestions[lang].forEach((item, i) => {
+      const qEl = document.createElement('div');
+      qEl.className = 'question';
+      qEl.style.setProperty('--d', (i * 0.08) + 's');
+      qEl.innerHTML = `<p><b>${i + 1}. ${item.q}</b></p>`;
+
+      const opts = document.createElement('div');
+      opts.className = 'options';
+
+      item.options.forEach((opt, j) => {
+        const btn = document.createElement('button');
+        btn.className   = 'option';
+        btn.textContent = opt;
+        btn.onclick = () => {
+          if (btn.classList.contains('answered')) return;
+          if (j === item.correct) { btn.classList.add('correct'); score++; }
+          else { btn.classList.add('wrong'); opts.children[item.correct].classList.add('correct'); }
+          totalAnswered++;
+          Array.from(opts.children).forEach(b => b.classList.add('answered'));
+          updateScoreDisplay();
+          if (totalAnswered === TOTAL_Q) setTimeout(showResult, 600);
+        };
+        opts.appendChild(btn);
+      });
+
+      qEl.appendChild(opts);
+      qDiv.appendChild(qEl);
+    });
+  }
+
+  function updateScoreDisplay() {
+    document.getElementById('scoreDisplay').textContent = `Score: ${score} / ${totalAnswered}`;
+  }
+
+  /* ── Show result + save to Supabase ──────────────────────────────────────── */
+  async function showResult() {
+    document.getElementById('quizContainer').style.display = 'none';
+    const rc = document.getElementById('resultCard');
+    rc.style.display = 'block';
+
+    document.getElementById('finalScore').textContent = `${score}/${TOTAL_Q}`;
+
+    const pct = Math.round((score / TOTAL_Q) * 100);
+    let msg, badge, badgeColor;
+
+    if (pct === 100) {
+      msg = "Perfect! You're a scam-busting champion! 🏆";
+      badge = "🥇 EXPERT"; badgeColor = "#fbbf24";
+    } else if (pct >= 70) {
+      msg = "Great job! You're well protected against scams.";
+      badge = "🥈 SMART"; badgeColor = "#22c55e";
+    } else if (pct >= 50) {
+      msg = "Not bad, but brush up on scam awareness.";
+      badge = "🥉 LEARNING"; badgeColor = "#f97316";
+    } else {
+      msg = "You're at risk! Please read more about digital scams.";
+      badge = "⚠️ AT RISK"; badgeColor = "#ef4444";
+    }
+
+    document.getElementById('resultMsg').textContent = msg;
+    const rb = document.getElementById('resultBadge');
+    rb.textContent       = badge;
+    rb.style.background  = badgeColor + '22';
+    rb.style.border      = `1px solid ${badgeColor}`;
+    rb.style.color       = badgeColor;
+
+    /* Save to quiz table: name, score, total */
+    const { error } = await client.from('quiz').insert([{
+      name:  playerName,
+      score: score,
+      total: TOTAL_Q
+    }]);
+
+    document.getElementById('savedNote').textContent = error
+      ? '⚠️ Could not save score: ' + error.message
+      : '✅ Score saved!';
+  }
+
+  /* ── Scroll-to-top ───────────────────────────────────────────────────────── */
+  window.addEventListener('scroll', () => {
+    document.getElementById('topBtn').style.display = window.scrollY > 300 ? 'block' : 'none';
+  });
+</script>
+</body>
+</html>
