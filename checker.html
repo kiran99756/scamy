@@ -1,0 +1,377 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>ScamY – Scam Checker</title>
+  <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg: #060408; --bg2: #0e060f; --bg3: #170a1a;
+      --purple: #7c3aed; --purple-light: #a855f7; --purple-glow: #c084fc;
+      --accent: #e040fb; --text: #ede9fe; --text-dim: #9178b5;
+      --border: rgba(124,58,237,0.3); --card-bg: rgba(23,10,26,0.9);
+      --red: #ef4444; --green: #22c55e; --orange: #f97316;
+    }
+    * { margin:0; padding:0; box-sizing:border-box; }
+    body { background:var(--bg); color:var(--text); font-family:'DM Sans',sans-serif; min-height:100vh; overflow-x:hidden; }
+    body::before { content:''; position:fixed; inset:0; background-image:url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.04'/%3E%3C/svg%3E"); pointer-events:none; z-index:0; opacity:0.4; }
+
+    /* Subtle animated grid */
+    .bg-grid { position:fixed; inset:0; z-index:0; background-image:linear-gradient(rgba(124,58,237,0.03) 1px,transparent 1px),linear-gradient(90deg,rgba(124,58,237,0.03) 1px,transparent 1px); background-size:50px 50px; animation:gridPan 30s linear infinite; pointer-events:none; }
+    @keyframes gridPan{0%{background-position:0 0}100%{background-position:50px 50px}}
+
+    header { position:sticky; top:0; z-index:100; background:rgba(6,4,8,0.92); backdrop-filter:blur(20px); border-bottom:1px solid var(--border); padding:0 30px; display:flex; align-items:center; justify-content:space-between; height:64px; }
+    .logo { font-family:'Syne',sans-serif; font-size:22px; font-weight:800; color:white; letter-spacing:-0.5px; }
+    .logo span { color:var(--accent); }
+    nav { display:flex; gap:4px; align-items:center; }
+    nav a { color:var(--text-dim); text-decoration:none; padding:7px 14px; border-radius:8px; font-size:14px; font-weight:500; transition:all 0.2s; }
+    nav a:hover, nav a.active { color:white; background:var(--bg3); }
+
+    .lang-bar { display:flex; justify-content:flex-end; gap:6px; padding:8px 30px; background:var(--bg2); border-bottom:1px solid var(--border); position:relative; z-index:10; }
+    .lang-btn { background:transparent; color:var(--text-dim); border:1px solid var(--border); padding:4px 12px; border-radius:20px; cursor:pointer; font-size:12px; font-family:'DM Sans',sans-serif; transition:all 0.2s; }
+    .lang-btn:hover, .lang-btn.active { background:var(--purple); color:white; border-color:var(--purple); box-shadow:0 0 10px rgba(124,58,237,0.4); }
+
+    /* PAGE HERO */
+    .page-hero { position:relative; z-index:1; text-align:center; padding:60px 30px 40px; background:radial-gradient(ellipse 70% 50% at 50% 0%, rgba(124,58,237,0.12) 0%, transparent 70%); border-bottom:1px solid var(--border); }
+    .page-hero h1 { font-family:'Syne',sans-serif; font-size:clamp(24px,4vw,40px); font-weight:800; letter-spacing:-0.5px; margin-bottom:10px; }
+    .page-hero h1 em { font-style:normal; color:var(--accent); }
+    .page-hero p { color:var(--text-dim); font-size:15px; max-width:540px; margin:0 auto; line-height:1.6; }
+
+    /* TOOL TABS */
+    .tool-tabs { position:relative; z-index:5; display:flex; justify-content:center; gap:8px; padding:24px 20px 0; flex-wrap:wrap; }
+    .tool-tab { background:var(--card-bg); border:1px solid var(--border); color:var(--text-dim); padding:10px 20px; border-radius:30px; cursor:pointer; transition:all 0.2s; font-family:'DM Sans',sans-serif; font-size:14px; font-weight:500; }
+    .tool-tab.active, .tool-tab:hover { background:var(--purple); color:white; border-color:var(--purple); box-shadow:0 0 16px rgba(124,58,237,0.3); transform:translateY(-2px); }
+
+    /* TOOL PANELS */
+    .tool-panel { display:none; max-width:700px; margin:0 auto; padding:24px 30px 50px; position:relative; z-index:5; }
+    .tool-panel.active { display:block; animation:fadeUp 0.4s ease both; }
+
+    .checker-card { background:var(--card-bg); border:1px solid var(--border); border-radius:18px; padding:32px; }
+    .checker-card h2 { font-family:'Syne',sans-serif; color:white; font-size:18px; font-weight:700; margin-bottom:6px; }
+    .checker-card .desc { color:var(--text-dim); font-size:13px; margin-bottom:22px; line-height:1.6; }
+
+    .checker-input { width:100%; padding:13px 16px; border-radius:10px; border:1px solid var(--border); background:var(--bg3); color:white; font-size:15px; font-family:'DM Sans',sans-serif; margin-bottom:14px; transition:all 0.2s; outline:none; }
+    .checker-input:focus { border-color:var(--purple); box-shadow:0 0 0 3px rgba(124,58,237,0.15); }
+    textarea.checker-input { resize:vertical; }
+    .check-btn { width:100%; background:var(--purple); color:white; border:none; padding:14px; border-radius:10px; cursor:pointer; font-size:15px; font-weight:600; font-family:'DM Sans',sans-serif; transition:all 0.2s; }
+    .check-btn:hover { background:var(--purple-light); box-shadow:0 0 20px rgba(124,58,237,0.4); transform:translateY(-1px); }
+    .check-btn:disabled { opacity:0.6; cursor:not-allowed; transform:none; }
+
+    /* RESULTS */
+    .result-box { margin-top:22px; border-radius:14px; padding:22px; display:none; animation:fadeUp 0.4s ease both; border:1px solid transparent; }
+    .result-box.safe { background:rgba(34,197,94,0.06); border-color:rgba(34,197,94,0.3); }
+    .result-box.danger { background:rgba(239,68,68,0.06); border-color:rgba(239,68,68,0.3); }
+    .result-box.warning { background:rgba(249,115,22,0.06); border-color:rgba(249,115,22,0.3); }
+    .result-box.unknown { background:rgba(124,58,237,0.06); border-color:var(--border); }
+    .result-icon { font-size:44px; text-align:center; display:block; margin-bottom:10px; }
+    .result-verdict { font-family:'Syne',sans-serif; font-size:18px; font-weight:800; text-align:center; margin-bottom:12px; }
+    .result-verdict.safe { color:var(--green); }
+    .result-verdict.danger { color:var(--red); }
+    .result-verdict.warning { color:var(--orange); }
+    .result-verdict.unknown { color:var(--purple-glow); }
+    .result-detail { font-size:13px; color:var(--text-dim); line-height:1.7; }
+    .risk-meter { margin:16px 0; }
+    .risk-label { font-size:11px; color:var(--text-dim); text-transform:uppercase; letter-spacing:0.5px; margin-bottom:6px; }
+    .risk-bar { height:8px; background:var(--bg3); border-radius:8px; overflow:hidden; }
+    .risk-fill { height:100%; border-radius:8px; transition:width 1s ease-out; }
+    .risk-fill.low { background:linear-gradient(90deg,var(--green),#4ade80); }
+    .risk-fill.medium { background:linear-gradient(90deg,var(--orange),#fbbf24); }
+    .risk-fill.high { background:linear-gradient(90deg,var(--red),#f87171); }
+    .flags { display:flex; flex-wrap:wrap; gap:6px; margin-top:14px; }
+    .flag { background:rgba(239,68,68,0.1); border:1px solid rgba(239,68,68,0.3); color:#fca5a5; padding:3px 10px; border-radius:20px; font-size:12px; }
+    .flag.ok { background:rgba(34,197,94,0.08); border-color:rgba(34,197,94,0.3); color:#86efac; }
+    .flag.warn { background:rgba(249,115,22,0.08); border-color:rgba(249,115,22,0.3); color:#fdba74; }
+
+    /* TIPS GRID */
+    .tips-grid { display:grid; grid-template-columns:repeat(auto-fit,minmax(190px,1fr)); gap:12px; margin-top:16px; }
+    .tip-card { background:rgba(124,58,237,0.06); border:1px solid var(--border); border-radius:12px; padding:16px; transition:all 0.2s; }
+    .tip-card:hover { border-color:var(--purple); box-shadow:0 0 14px rgba(124,58,237,0.12); }
+    .tip-icon { font-size:26px; margin-bottom:8px; }
+    .tip-card p { font-size:12px; color:var(--text-dim); line-height:1.5; }
+    .tip-card p b { color:var(--text); display:block; margin-bottom:3px; font-size:13px; }
+
+    footer { text-align:center; padding:30px; font-size:13px; color:var(--text-dim); border-top:1px solid var(--border); background:var(--bg2); position:relative; z-index:1; }
+    footer a { color:var(--purple-glow); text-decoration:none; }
+    #topBtn { display:none; position:fixed; bottom:28px; right:28px; z-index:50; background:var(--purple); color:white; border:none; width:44px; height:44px; border-radius:50%; cursor:pointer; font-size:18px; box-shadow:0 0 20px rgba(124,58,237,0.5); transition:all 0.3s; }
+    #topBtn:hover { background:var(--purple-light); transform:translateY(-3px); }
+    @keyframes fadeUp { from{opacity:0;transform:translateY(16px)} to{opacity:1;transform:translateY(0)} }
+    @media(max-width:768px){ header{padding:0 16px;} .lang-bar{padding:8px 16px;} .tool-panel{padding:20px 16px 40px;} .page-hero{padding:40px 16px 30px;} }
+  </style>
+</head>
+<body>
+<div class="bg-grid"></div>
+
+<header>
+  <div class="logo">Scam<span>Y</span></div>
+  <nav>
+    <a href="index.html">Home</a>
+    <a href="scam.html">Scams</a>
+    <a href="quiz.html">Quiz</a>
+    <a href="checker.html" class="active">Checker</a>
+    <a href="contact.html">Report</a>
+  </nav>
+</header>
+
+<div class="lang-bar">
+  <button class="lang-btn active" onclick="setLang('en',this)">🇬🇧 English</button>
+  <button class="lang-btn" onclick="setLang('hi',this)">🇮🇳 हिन्दी</button>
+  <button class="lang-btn" onclick="setLang('mr',this)">🇮🇳 मराठी</button>
+</div>
+
+<div class="page-hero">
+  <h1 data-key="checker_title">Scam <em>Checker Tools</em></h1>
+  <p data-key="checker_sub">Analyze URLs, phone numbers, UPI IDs and messages for scam indicators. Stay protected with risk detection.</p>
+</div>
+
+<div class="tool-tabs">
+  <div class="tool-tab active" onclick="showTool('url',this)">🌐 URL Checker</div>
+  <div class="tool-tab" onclick="showTool('phone',this)">📞 Phone Checker</div>
+  <div class="tool-tab" onclick="showTool('upi',this)">💳 UPI Checker</div>
+  <div class="tool-tab" onclick="showTool('message',this)">💬 Message Checker</div>
+  <div class="tool-tab" onclick="showTool('tips',this)">🛡️ Safety Tips</div>
+</div>
+
+<!-- URL CHECKER -->
+<div class="tool-panel active" id="panel-url">
+  <div class="checker-card">
+    <h2>🌐 URL / Website Checker</h2>
+    <p class="desc">Paste any suspicious link or website URL to check for scam indicators like fake domains, phishing patterns, suspicious TLDs, and lookalike URLs.</p>
+    <input class="checker-input" id="urlInput" type="text" placeholder="https://example.com or paste any link..." oninput="clearResult('urlResult')">
+    <button class="check-btn" onclick="checkURL()">🔍 Check URL</button>
+    <div class="result-box" id="urlResult"></div>
+  </div>
+</div>
+
+<!-- PHONE CHECKER -->
+<div class="tool-panel" id="panel-phone">
+  <div class="checker-card">
+    <h2>📞 Phone Number Checker</h2>
+    <p class="desc">Enter a phone number to check if it matches known scam patterns, international spoofing formats, or suspicious prefixes commonly used in India.</p>
+    <input class="checker-input" id="phoneInput" type="text" placeholder="+91 XXXXXXXXXX or any number..." oninput="clearResult('phoneResult')" maxlength="20">
+    <button class="check-btn" onclick="checkPhone()">🔍 Check Number</button>
+    <div class="result-box" id="phoneResult"></div>
+  </div>
+</div>
+
+<!-- UPI CHECKER -->
+<div class="tool-panel" id="panel-upi">
+  <div class="checker-card">
+    <h2>💳 UPI ID Checker</h2>
+    <p class="desc">Verify a UPI ID for suspicious patterns. Scammers often use fake UPI handles mimicking banks, government agencies, or payment apps.</p>
+    <input class="checker-input" id="upiInput" type="text" placeholder="example@upi or name@paytm..." oninput="clearResult('upiResult')" maxlength="50">
+    <button class="check-btn" onclick="checkUPI()">🔍 Check UPI ID</button>
+    <div class="result-box" id="upiResult"></div>
+  </div>
+</div>
+
+<!-- MESSAGE CHECKER -->
+<div class="tool-panel" id="panel-message">
+  <div class="checker-card">
+    <h2>💬 Message / SMS Checker</h2>
+    <p class="desc">Paste a suspicious WhatsApp message, SMS, or email to scan for scam keywords, urgency triggers, phishing language, and suspicious patterns.</p>
+    <textarea class="checker-input" id="msgInput" rows="5" placeholder="Paste the suspicious message here..." oninput="clearResult('msgResult')"></textarea>
+    <button class="check-btn" onclick="checkMessage()">🔍 Analyze Message</button>
+    <div class="result-box" id="msgResult"></div>
+  </div>
+</div>
+
+<!-- SAFETY TIPS -->
+<div class="tool-panel" id="panel-tips">
+  <div class="checker-card">
+    <h2>🛡️ Safety Tips</h2>
+    <p class="desc">Essential rules to protect yourself from digital scams in India.</p>
+    <div class="tips-grid">
+      <div class="tip-card"><div class="tip-icon">🔐</div><p><b>Never share OTP</b>No bank or app will ever ask for your OTP, PIN, or CVV.</p></div>
+      <div class="tip-card"><div class="tip-icon">🔗</div><p><b>Check URLs</b>Look for typos like "sbi-bank.com" or extra words in real domain names.</p></div>
+      <div class="tip-card"><div class="tip-icon">💳</div><p><b>UPI = Only outgoing</b>Scanning a QR code or entering a PIN sends money — never receives.</p></div>
+      <div class="tip-card"><div class="tip-icon">📞</div><p><b>Verify callers</b>Hang up and call back using the official number from the website.</p></div>
+      <div class="tip-card"><div class="tip-icon">📱</div><p><b>Avoid APKs</b>Never install apps from WhatsApp, SMS, or unknown websites.</p></div>
+      <div class="tip-card"><div class="tip-icon">🏦</div><p><b>Helpline: 1930</b>Call India's cybercrime helpline immediately if you're scammed.</p></div>
+      <div class="tip-card"><div class="tip-icon">⚡</div><p><b>Urgency = Red flag</b>Scammers always create fake urgency. Take time to verify first.</p></div>
+      <div class="tip-card"><div class="tip-icon">🎁</div><p><b>Free = Scam</b>No one gives free money. If it sounds too good, it's a trap.</p></div>
+    </div>
+  </div>
+</div>
+
+<footer>
+  © 2026 ScamY · Scam Awareness India · Built by <a href="#">Kiran, Ashwin, Harshal &amp; Siddharth</a> ·
+  Emergency Helpline: <strong style="color:var(--accent)">1930</strong>
+</footer>
+<button id="topBtn" onclick="window.scrollTo({top:0,behavior:'smooth'})">↑</button>
+
+<script>
+function showTool(name,btn){
+  document.querySelectorAll('.tool-panel').forEach(p=>p.classList.remove('active'));
+  document.querySelectorAll('.tool-tab').forEach(b=>b.classList.remove('active'));
+  document.getElementById('panel-'+name).classList.add('active');
+  btn.classList.add('active');
+  window.scrollTo({top:document.querySelector('.tool-tabs').offsetTop-70,behavior:'smooth'});
+}
+function clearResult(id){const r=document.getElementById(id);if(r)r.style.display='none';}
+
+function showResult(resultId,{type,icon,verdict,detail,risk,flags}){
+  const box=document.getElementById(resultId);
+  const riskClass=risk<35?'low':risk<65?'medium':'high';
+  box.className=`result-box ${type}`;
+  box.style.display='block';
+  box.innerHTML=`
+    <span class="result-icon">${icon}</span>
+    <div class="result-verdict ${type}">${verdict}</div>
+    <div class="result-detail">${detail}</div>
+    <div class="risk-meter">
+      <div class="risk-label">Risk Level: ${risk}%</div>
+      <div class="risk-bar"><div class="risk-fill ${riskClass}" style="width:0%" id="rf_${resultId}"></div></div>
+    </div>
+    <div class="flags">${flags.map(f=>`<span class="flag ${f.ok?'ok':f.warn?'warn':''}">${f.text}</span>`).join('')}</div>`;
+  setTimeout(()=>{const rf=document.getElementById('rf_'+resultId);if(rf)rf.style.width=risk+'%';},100);
+}
+
+// URL CHECKER
+const suspiciousTLDs=['.xyz','.tk','.ml','.ga','.cf','.gq','.ru','.cn','.pw','.click','.top','.loan','.online','.site','.club'];
+const suspiciousKeywords=['free','prize','win','lucky','offer','claim','verify','update','suspended','blocked','reward','cashback','gov-india','income-tax','uidai-','sbi-','hdfc-','paytm-','irctc-','ration'];
+const shorteners=['bit.ly','tinyurl','t.co','ow.ly','short.gy','tiny.cc','rebrand.ly','snip.ly','cutt.ly','rb.gy'];
+
+function checkURL(){
+  const raw=document.getElementById('urlInput').value.trim();
+  if(!raw){alert('Please enter a URL');return;}
+  let url=raw;
+  if(!/^https?:\/\//i.test(url)) url='https://'+url;
+  let risk=0;const flags=[];
+  try{
+    const parsed=new URL(url);
+    const host=parsed.hostname.toLowerCase();
+    if(parsed.protocol==='https:'){flags.push({text:'✅ HTTPS',ok:true});}
+    else{flags.push({text:'❌ Not HTTPS'});risk+=30;}
+    if(shorteners.some(s=>host.includes(s))){flags.push({text:'⚠️ URL Shortener',warn:true});risk+=20;}
+    const tld=host.substring(host.lastIndexOf('.'));
+    if(suspiciousTLDs.includes(tld)){flags.push({text:'❌ Risky TLD: '+tld});risk+=35;}
+    if(/^\d+\.\d+\.\d+\.\d+/.test(host)){flags.push({text:'❌ IP Address URL'});risk+=40;}
+    const kw=suspiciousKeywords.filter(k=>host.includes(k));
+    if(kw.length){flags.push({text:'❌ Suspicious keywords: '+kw.join(', ')});risk+=kw.length*10;}
+    const banks=['sbi','hdfc','icici','axis','paytm','phonepe','gpay','npci','uidai','incometax'];
+    const fake=banks.filter(b=>host.includes(b)&&!host.endsWith('.'+b+'.in')&&!host.endsWith('.'+b+'.com'));
+    if(fake.length){flags.push({text:'🚨 Fake bank URL detected'});risk+=50;}
+    if(url.length>100){flags.push({text:'⚠️ Unusually long URL',warn:true});risk+=10;}
+    if(/\d{3,}/.test(host)){flags.push({text:'⚠️ Numbers in domain',warn:true});risk+=10;}
+    const dots=host.split('.').length-1;
+    if(dots>=3){flags.push({text:'⚠️ Multiple subdomains',warn:true});risk+=15;}
+    else{flags.push({text:'✅ Clean domain structure',ok:true});}
+    if(flags.length<3)flags.push({text:'✅ No major red flags',ok:true});
+    risk=Math.min(100,risk);
+    const type=risk<35?'safe':risk<65?'warning':'danger';
+    const icon=risk<35?'✅':risk<65?'⚠️':'🚨';
+    const verdict=risk<35?'LIKELY SAFE':risk<65?'SUSPICIOUS — USE CAUTION':'HIGH RISK — POSSIBLE SCAM';
+    showResult('urlResult',{type,icon,verdict,detail:`<b>URL:</b> ${raw}<br><b>Domain:</b> ${host}<br><br>${risk<35?'No major warning signs detected. Still verify the domain is official.':risk<65?'Several suspicious patterns found. Verify this site is legitimate before entering any details.':'Multiple high-risk indicators found. Do NOT click or enter any personal information.'}`,risk,flags});
+  }catch(e){
+    showResult('urlResult',{type:'unknown',icon:'❓',verdict:'INVALID URL',detail:'Could not parse this URL. Make sure it is a valid web address.',risk:0,flags:[{text:'❓ Invalid format'}]});
+  }
+}
+
+// PHONE CHECKER
+const knownScamPrefixes=['+92','+880','+234','+256','+255','+254','+212','+213','00 92'];
+const telecomPrefixes={'7':true,'8':true,'9':true,'6':true};
+
+function checkPhone(){
+  const raw=document.getElementById('phoneInput').value.trim();
+  if(!raw){alert('Please enter a phone number');return;}
+  const digits=raw.replace(/\D/g,'');
+  let risk=0;const flags=[];
+  if(knownScamPrefixes.some(p=>raw.startsWith(p))){flags.push({text:'🚨 Known scam country prefix'});risk+=50;}
+  const indDigits=digits.startsWith('91')?digits.slice(2):digits;
+  if(indDigits.length===10){
+    if(telecomPrefixes[indDigits[0]]){flags.push({text:'✅ Valid Indian mobile prefix',ok:true});}
+    else if(indDigits.startsWith('1')||indDigits.startsWith('2')){flags.push({text:'⚠️ Unusual Indian number',warn:true});risk+=20;}
+  }else if(digits.length>13){flags.push({text:'⚠️ Unusually long number',warn:true});risk+=15;}
+  if(raw.includes('1800')||raw.includes('1860')){flags.push({text:'⚠️ Toll-free (can be spoofed)',warn:true});risk+=15;}
+  if(/^(\d)\1{8,}$/.test(indDigits)){flags.push({text:'❌ Suspicious repeated digits'});risk+=35;}
+  if(digits==='1234567890'||digits==='9876543210'){flags.push({text:'❌ Sequential number'});risk+=40;}
+  if(!flags.length)flags.push({text:'✅ No red flags in number',ok:true});
+  risk=Math.min(100,risk);
+  const type=risk<35?'safe':risk<65?'warning':'danger';
+  const icon=risk<35?'✅':risk<65?'⚠️':'🚨';
+  const verdict=risk<35?'APPEARS NORMAL':'SUSPICIOUS NUMBER';
+  showResult('phoneResult',{type,icon,verdict,detail:`<b>Number:</b> ${raw}<br><br>${risk<35?'This number format appears normal. Always verify the caller\'s identity independently.':'This number shows suspicious characteristics. Do not share personal or financial information. Report to cybercrime.gov.in or call 1930.'}`,risk,flags});
+}
+
+// UPI CHECKER
+const legit_vpa_handles=['oksbi','okicici','okhdfcbank','okaxis','paytm','ybl','upi','ibl','axl','timecosmos','apl','abfspay','rajgovnsp','barodampay','dbs'];
+const fake_bank_keywords=['sbi','hdfc','icici','paytm','npci','uidai','rbi','income','tax','gov','india','modi','help','lottery','prize','reward','refund','cashback'];
+
+function checkUPI(){
+  const raw=document.getElementById('upiInput').value.trim().toLowerCase();
+  if(!raw){alert('Please enter a UPI ID');return;}
+  if(!raw.includes('@')){
+    showResult('upiResult',{type:'unknown',icon:'❓',verdict:'INVALID UPI FORMAT',detail:'A valid UPI ID must contain "@" like: name@paytm or mobile@upi',risk:0,flags:[{text:'❓ Missing @ symbol'}]});
+    return;
+  }
+  const [user,handle]=raw.split('@');
+  let risk=0;const flags=[];
+  if(legit_vpa_handles.includes(handle)){flags.push({text:'✅ Recognized VPA handle',ok:true});}
+  else{flags.push({text:'⚠️ Unrecognized VPA handle',warn:true});risk+=15;}
+  const bankKw=fake_bank_keywords.filter(k=>handle.includes(k));
+  if(bankKw.length){flags.push({text:'🚨 Bank/Gov name in handle: '+bankKw.join(', ')});risk+=40;}
+  const usrKw=['free','prize','win','lottery','govt','help','officer','reward','official'];
+  const matchUsr=usrKw.filter(k=>user.includes(k));
+  if(matchUsr.length){flags.push({text:'❌ Suspicious username keywords: '+matchUsr.join(', ')});risk+=30;}
+  if(/[^a-z0-9._-]/.test(user)){flags.push({text:'⚠️ Special characters in ID',warn:true});risk+=20;}
+  if(/^\d{10}$/.test(user)){flags.push({text:'ℹ️ Mobile number UPI',ok:true});}
+  if(!flags.some(f=>!f.ok&&!f.warn)){flags.push({text:'✅ No major issues',ok:true});}
+  risk=Math.min(100,risk);
+  const type=risk<35?'safe':risk<65?'warning':'danger';
+  const icon=risk<35?'✅':risk<65?'⚠️':'🚨';
+  const verdict=risk<35?'LOOKS LEGITIMATE':risk<65?'VERIFY BEFORE PAYING':'HIGH RISK UPI';
+  showResult('upiResult',{type,icon,verdict,detail:`<b>UPI ID:</b> ${raw}<br><b>Username:</b> ${user} | <b>Handle:</b> @${handle}<br><br>${risk<35?'This UPI ID format appears legitimate. Always double-check recipient name before confirming payment.':'This UPI ID has suspicious characteristics. NEVER pay to unknown UPI IDs without verifying the recipient in person.'}`,risk,flags});
+}
+
+// MESSAGE CHECKER
+const scamTriggerWords=[
+  {word:'otp',score:25,label:'🔑 OTP mention'},{word:'pin',score:20,label:'🔑 PIN mention'},{word:'cvv',score:30,label:'💳 CVV mention'},
+  {word:'won',score:20,label:'🎁 Prize claim'},{word:'winner',score:25,label:'🏆 Winner claim'},{word:'prize',score:20,label:'🎁 Prize claim'},
+  {word:'free',score:10,label:'🎁 Free offer'},{word:'lottery',score:30,label:'🎰 Lottery scam'},{word:'congratulations',score:15,label:'🎊 Congratulation lure'},
+  {word:'urgent',score:20,label:'⚡ Urgency trigger'},{word:'immediately',score:15,label:'⚡ Urgency trigger'},{word:'expire',score:15,label:'⏰ Deadline pressure'},
+  {word:'blocked',score:25,label:'🚫 Fear trigger'},{word:'suspended',score:25,label:'🚫 Fear trigger'},{word:'arrested',score:30,label:'👮 Arrest scam'},
+  {word:'digital arrest',score:50,label:'🚨 Digital Arrest scam'},{word:'cbi',score:25,label:'👮 Authority impersonation'},
+  {word:'income tax',score:25,label:'🏛️ Tax threat'},{word:'aadhaar',score:15,label:'🪪 Aadhaar mention'},{word:'kyc',score:20,label:'📋 KYC fraud'},
+  {word:'click here',score:20,label:'🔗 Suspicious link'},{word:'bit.ly',score:30,label:'🔗 Short URL'},{word:'tinyurl',score:25,label:'🔗 Short URL'},
+  {word:'apk',score:35,label:'📦 APK download request'},{word:'install',score:15,label:'📥 Install request'},
+  {word:'screen share',score:35,label:'📱 Screen share'},{word:'anydesk',score:40,label:'🖥️ Remote access app'},{word:'teamviewer',score:40,label:'🖥️ Remote access app'},
+  {word:'account suspended',score:30,label:'🚫 Account threat'},{word:'verify now',score:25,label:'⚠️ Verification pressure'},
+  {word:'refund',score:15,label:'💰 Refund scam'},{word:'cashback',score:10,label:'💰 Cashback lure'},
+];
+
+function checkMessage(){
+  const msg=document.getElementById('msgInput').value.trim().toLowerCase();
+  if(!msg||msg.length<10){alert('Please enter a message to analyze (at least 10 characters)');return;}
+  let risk=0;const found=[];const safe=[];
+  scamTriggerWords.forEach(({word,score,label})=>{if(msg.includes(word.toLowerCase())){found.push({text:label});risk+=score;}});
+  const urls=msg.match(/https?:\/\/[^\s]+/g)||[];
+  if(urls.length){found.push({text:`🔗 ${urls.length} URL(s) detected`});risk+=urls.length*15;}
+  if(msg.split(' ').length<5)safe.push({text:'ℹ️ Very short message',warn:true});
+  const phones=msg.match(/\d{10}/g)||[];
+  if(phones.length>2){found.push({text:`📞 Multiple phone numbers (${phones.length})`});risk+=20;}
+  if(!found.length)safe.push({text:'✅ No scam keywords found',ok:true});
+  const flags=[...found,...safe];
+  risk=Math.min(100,risk);
+  const type=risk<30?'safe':risk<60?'warning':'danger';
+  const icon=risk<30?'✅':risk<60?'⚠️':'🚨';
+  const verdict=risk<30?'MESSAGE APPEARS SAFE':risk<60?'SUSPICIOUS MESSAGE':'SCAM MESSAGE DETECTED';
+  showResult('msgResult',{type,icon,verdict,detail:`<b>Scam indicators found:</b> ${found.length}<br><br>${risk<30?'No major scam patterns detected. Always stay cautious with unexpected messages from unknown senders.':risk<60?'Some suspicious patterns found. Do NOT click links, call back unknown numbers, or share personal details.':'Multiple high-risk scam patterns detected. Block the sender, do NOT interact, and report to cybercrime.gov.in or call 1930.'}`,risk,flags});
+}
+
+// LANGUAGE
+const translations={
+  en:{checker_title:'Scam Checker Tools',checker_sub:'Analyze URLs, phone numbers, UPI IDs and messages for scam indicators. Stay protected with risk detection.'},
+  hi:{checker_title:'घोटाला जाँचकर्ता उपकरण',checker_sub:'URL, फोन नंबर, UPI ID और संदेशों की जाँच करें। जोखिम पहचान से सुरक्षित रहें।'},
+  mr:{checker_title:'फसवणूक तपासक साधने',checker_sub:'URL, फोन नंबर, UPI ID आणि संदेश तपासा. जोखीम शोधून सुरक्षित राहा.'}
+};
+function setLang(lang,btn){
+  const t=translations[lang];
+  document.querySelectorAll('[data-key]').forEach(el=>{const k=el.getAttribute('data-key');if(t[k])el.textContent=t[k];});
+  document.querySelectorAll('.lang-btn').forEach(b=>b.classList.remove('active'));
+  btn.classList.add('active');
+}
+window.addEventListener('scroll',()=>{document.getElementById('topBtn').style.display=window.scrollY>300?'block':'none';});
+</script>
+</body>
+</html>
