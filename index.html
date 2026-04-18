@@ -1,0 +1,846 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <title>ScamY – Scam Awareness India</title>
+  <style>
+    :root {
+      --bg: #060408;
+      --bg2: #0e060f;
+      --bg3: #170a1a;
+      --purple: #7c3aed;
+      --purple-light: #a855f7;
+      --purple-glow: #c084fc;
+      --accent: #e040fb;
+      --text: #ede9fe;
+      --text-dim: #9178b5;
+      --border: rgba(124,58,237,0.3);
+      --card-bg: rgba(23,10,26,0.9);
+      --red: #ef4444;
+      --green: #22c55e;
+      --gold: #ffd700;
+    }
+    * { margin:0; padding:0; box-sizing:border-box; }
+    body { background: var(--bg); color: var(--text); font-family: 'DM Sans', sans-serif; min-height: 100vh; overflow-x: hidden; }
+
+    /* NOISE OVERLAY */
+    body::before {
+      content:''; position:fixed; inset:0;
+      background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.04'/%3E%3C/svg%3E");
+      pointer-events:none; z-index:0; opacity:0.4;
+    }
+
+    /* HEADER */
+    header {
+      position: sticky; top:0; z-index:100;
+      background: rgba(6,4,8,0.92);
+      backdrop-filter: blur(20px);
+      border-bottom: 1px solid var(--border);
+      padding: 0 30px;
+      display: flex; align-items: center; justify-content: space-between;
+      height: 64px;
+    }
+    .logo { font-family: 'Syne', sans-serif; font-size: 22px; font-weight: 800; color: white; letter-spacing: -0.5px; }
+    .logo span { color: var(--accent); }
+    nav { display: flex; gap: 4px; align-items: center; }
+    nav a {
+      color: var(--text-dim); text-decoration: none; padding: 7px 14px;
+      border-radius: 8px; font-size: 14px; font-weight: 500; transition: all 0.2s;
+    }
+    nav a:hover, nav a.active { color: white; background: var(--bg3); }
+    .admin-btn {
+      background: transparent; color: var(--purple-glow); border: 1px solid var(--border);
+      padding: 7px 16px; border-radius: 8px; cursor: pointer; font-size: 13px;
+      font-family: 'DM Sans', sans-serif; font-weight: 500; transition: all 0.2s; margin-left: 8px;
+    }
+    .admin-btn:hover { background: var(--bg3); border-color: var(--purple); box-shadow: 0 0 12px rgba(124,58,237,0.3); }
+
+    /* LANG SWITCHER */
+    .lang-bar {
+      display: flex; justify-content: flex-end; gap: 6px;
+      padding: 8px 30px; background: var(--bg2);
+      border-bottom: 1px solid var(--border);
+      position: relative; z-index: 10;
+    }
+    .lang-btn {
+      background: transparent; color: var(--text-dim); border: 1px solid var(--border);
+      padding: 4px 12px; border-radius: 20px; cursor: pointer; font-size: 12px;
+      font-family: 'DM Sans', sans-serif; transition: all 0.2s;
+    }
+    .lang-btn:hover, .lang-btn.active {
+      background: var(--purple); color: white; border-color: var(--purple);
+      box-shadow: 0 0 10px rgba(124,58,237,0.4);
+    }
+
+    /* LIVE TICKER */
+    .ticker {
+      background: rgba(124,58,237,0.08); border-top: 1px solid var(--border);
+      border-bottom: 1px solid var(--border);
+      padding: 10px 0; overflow: hidden; position: relative; z-index: 5;
+    }
+    .ticker-inner { display: flex; gap: 60px; animation: ticker 30s linear infinite; white-space: nowrap; }
+    .ticker-item { font-size: 13px; color: var(--text-dim); display: flex; align-items: center; gap: 8px; }
+    .ticker-item b { color: var(--red); }
+    .ticker-item .tag { background: rgba(124,58,237,0.2); color: var(--purple-glow); padding: 2px 8px; border-radius: 4px; font-size: 11px; }
+    @keyframes ticker { from{transform:translateX(0)} to{transform:translateX(-50%)} }
+
+    /* HERO */
+    .hero {
+      position: relative; overflow: hidden;
+      padding: 80px 30px 60px;
+      text-align: center;
+      background: radial-gradient(ellipse 80% 60% at 50% 0%, rgba(124,58,237,0.15) 0%, transparent 70%);
+      z-index: 1;
+    }
+    .hero-badge {
+      display: inline-flex; align-items: center; gap: 8px;
+      background: rgba(124,58,237,0.1); border: 1px solid var(--border);
+      padding: 6px 14px; border-radius: 20px; font-size: 12px;
+      color: var(--purple-glow); letter-spacing: 0.5px; margin-bottom: 24px;
+      animation: fadeUp 0.6s ease forwards;
+    }
+    .hero-badge::before { content: '🔴'; animation: pulse-dot 1.5s infinite; }
+    @keyframes pulse-dot { 0%,100%{opacity:1} 50%{opacity:0.3} }
+    .hero h1 {
+      font-family: 'Syne', sans-serif; font-size: clamp(32px, 5vw, 56px); font-weight: 800;
+      line-height: 1.1; letter-spacing: -1px; margin-bottom: 16px;
+      animation: fadeUp 0.7s 0.1s ease both;
+    }
+    .hero h1 em { font-style: normal; color: var(--accent); }
+
+    /* HERO AMOUNT BANNER */
+    .hero-amount-wrap {
+      margin: 18px auto 0; display: inline-flex; flex-direction: column; align-items: center;
+      background: rgba(239,68,68,0.07); border: 1px solid rgba(239,68,68,0.25);
+      border-radius: 16px; padding: 14px 32px; animation: fadeUp 0.7s 0.15s ease both;
+    }
+    .hero-amount-label { font-size: 11px; color: var(--text-dim); text-transform: uppercase; letter-spacing: 1.5px; margin-bottom: 4px; }
+    .hero-amount-val {
+      font-family: 'Syne', sans-serif; font-size: clamp(28px, 5vw, 52px); font-weight: 800;
+      color: var(--red); line-height: 1;
+      text-shadow: 0 0 24px rgba(239,68,68,0.4);
+    }
+    .hero-amount-sub { font-size: 12px; color: #aaa; margin-top: 6px; }
+    .hero-report-badges {
+      display: flex; justify-content: center; gap: 14px; flex-wrap: wrap; margin-top: 16px;
+      animation: fadeUp 0.7s 0.2s ease both;
+    }
+    .hero-badge-pill {
+      background: rgba(124,58,237,0.12); border: 1px solid var(--border);
+      border-radius: 30px; padding: 6px 18px; font-size: 13px; color: var(--text-dim);
+    }
+    .hero-badge-pill span { color: var(--purple-glow); font-weight: 600; }
+
+    .hero p.tagline { color: var(--text-dim); font-size: 16px; max-width: 520px; margin: 16px auto 24px; line-height: 1.6; animation: fadeUp 0.7s 0.2s ease both; }
+    .hero-cta { display: flex; gap: 12px; justify-content: center; flex-wrap: wrap; animation: fadeUp 0.7s 0.3s ease both; }
+    .btn-primary {
+      background: var(--purple); color: white; border: none; padding: 12px 24px;
+      border-radius: 10px; cursor: pointer; font-size: 15px; font-family: 'DM Sans', sans-serif;
+      font-weight: 500; transition: all 0.2s; text-decoration: none; display: inline-block;
+    }
+    .btn-primary:hover { background: var(--purple-light); box-shadow: 0 0 20px rgba(124,58,237,0.5); transform: translateY(-1px); }
+    .btn-outline {
+      background: transparent; color: var(--text); border: 1px solid var(--border);
+      padding: 12px 24px; border-radius: 10px; cursor: pointer; font-size: 15px;
+      font-family: 'DM Sans', sans-serif; font-weight: 500; transition: all 0.2s;
+      text-decoration: none; display: inline-block;
+    }
+    .btn-outline:hover { border-color: var(--purple); background: var(--bg3); }
+
+    /* DASHBOARD */
+    .section { padding: 40px 30px; max-width: 1200px; margin: 0 auto; position: relative; z-index: 1; }
+    .section-title { font-family: 'Syne', sans-serif; font-size: 22px; font-weight: 700; margin-bottom: 6px; }
+    .section-sub { color: var(--text-dim); font-size: 14px; margin-bottom: 24px; }
+
+    .stats-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 16px; margin-bottom: 30px; }
+    .stat-card {
+      background: var(--card-bg); border: 1px solid var(--border);
+      border-radius: 14px; padding: 20px 24px; transition: all 0.3s;
+    }
+    .stat-card:hover { border-color: var(--purple); box-shadow: 0 0 24px rgba(124,58,237,0.15); transform: translateY(-2px); }
+    .stat-label { font-size: 12px; color: var(--text-dim); text-transform: uppercase; letter-spacing: 0.8px; margin-bottom: 8px; }
+    .stat-val { font-family: 'Syne', sans-serif; font-size: 28px; font-weight: 800; color: var(--purple-glow); }
+    .stat-val.red { color: var(--red); }
+    .stat-val.gold { color: var(--gold); }
+    .stat-change { font-size: 12px; color: var(--red); margin-top: 4px; }
+
+    /* CHARTS */
+    .chart-wrap {
+      background: var(--card-bg); border: 1px solid var(--border);
+      border-radius: 14px; padding: 24px; margin-bottom: 20px;
+    }
+    .chart-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; flex-wrap: wrap; gap: 10px; }
+    .chart-title { font-family: 'Syne', sans-serif; font-size: 16px; font-weight: 700; }
+    .live-badge {
+      display: flex; align-items: center; gap: 6px; font-size: 11px;
+      color: var(--green); background: rgba(34,197,94,0.1); border: 1px solid rgba(34,197,94,0.2);
+      padding: 4px 10px; border-radius: 20px;
+    }
+    .live-dot { width: 6px; height: 6px; border-radius: 50%; background: var(--green); animation: pulse-dot 1.5s infinite; }
+    .charts-triple { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 16px; margin-bottom: 30px; }
+
+    /* RECENT REPORTS */
+    .reports-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 14px; }
+    .report-card {
+      background: var(--card-bg); border: 1px solid var(--border);
+      border-radius: 12px; padding: 18px; transition: all 0.3s;
+      animation: fadeUp 0.5s ease both;
+    }
+    .report-card:hover { border-color: var(--purple); box-shadow: 0 0 20px rgba(124,58,237,0.12); }
+    .report-top { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 8px; }
+    .report-name { font-weight: 600; font-size: 15px; }
+    .report-amount { color: var(--red); font-family: 'Syne', sans-serif; font-weight: 700; font-size: 16px; }
+    .report-meta { font-size: 12px; color: var(--text-dim); margin-bottom: 6px; }
+    .report-type { display: inline-block; background: rgba(124,58,237,0.15); color: var(--purple-glow); padding: 3px 10px; border-radius: 6px; font-size: 12px; margin-top: 4px; }
+
+    /* SCAM TYPES */
+    .scam-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 16px; }
+    .scam-card {
+      background: var(--card-bg); border: 1px solid var(--border);
+      border-radius: 14px; padding: 22px; transition: all 0.3s;
+      position: relative; overflow: hidden;
+    }
+    .scam-card::before {
+      content: ''; position: absolute; top: 0; left: 0; right: 0; height: 2px;
+      background: linear-gradient(90deg, var(--purple), var(--accent));
+      opacity: 0; transition: opacity 0.3s;
+    }
+    .scam-card:hover { border-color: var(--purple); box-shadow: 0 8px 32px rgba(124,58,237,0.12); transform: translateY(-3px); }
+    .scam-card:hover::before { opacity: 1; }
+    .scam-icon { font-size: 28px; margin-bottom: 12px; }
+    .scam-card h3 { font-family: 'Syne', sans-serif; font-size: 16px; font-weight: 700; color: var(--purple-glow); margin-bottom: 8px; }
+    .scam-card p { font-size: 13px; line-height: 1.6; color: var(--text-dim); }
+
+    /* SCAM FLOW */
+    .scam-flow {
+      display: flex; justify-content: center; gap: 10px; flex-wrap: wrap;
+      padding: 20px 30px; font-size: 13px; color: var(--text-dim);
+      position: relative; z-index: 1;
+      background: rgba(124,58,237,0.04); border-top: 1px solid var(--border); border-bottom: 1px solid var(--border);
+    }
+    .scam-flow-step {
+      background: var(--card-bg); border: 1px solid var(--border); border-radius: 8px;
+      padding: 6px 14px; font-size: 13px; color: var(--text-dim);
+    }
+    .scam-flow-arrow { color: var(--purple-glow); font-size: 18px; align-self: center; }
+
+    /* SAFETY TIPS */
+    .tips-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+    @media(max-width:640px) { .tips-grid { grid-template-columns: 1fr; } }
+    .tips-card { background: var(--card-bg); border: 1px solid var(--border); border-radius: 14px; padding: 22px; }
+    .tips-card.dos { border-left: 3px solid var(--green); }
+    .tips-card.donts { border-left: 3px solid var(--red); }
+    .tips-title { font-family: 'Syne', sans-serif; font-size: 16px; font-weight: 700; margin-bottom: 14px; }
+    .tips-title.green { color: var(--green); }
+    .tips-title.red { color: var(--red); }
+    .tip-item { display: flex; align-items: flex-start; gap: 10px; margin-bottom: 10px; font-size: 13px; line-height: 1.5; color: var(--text-dim); }
+    .tip-dot { width: 18px; height: 18px; border-radius: 50%; flex-shrink: 0; display: flex; align-items: center; justify-content: center; font-size: 10px; margin-top: 1px; }
+    .tip-dot.green { background: rgba(34,197,94,0.15); color: var(--green); }
+    .tip-dot.red { background: rgba(239,68,68,0.15); color: var(--red); }
+
+    /* USE CASES */
+    .usecase-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 20px; }
+    .usecase-card {
+      background: var(--card-bg); border: 1px solid var(--border);
+      border-radius: 14px; padding: 24px; transition: all 0.3s;
+    }
+    .usecase-card:hover { border-color: var(--purple); transform: translateY(-3px); box-shadow: 0 12px 40px rgba(124,58,237,0.12); }
+    .uc-step { font-size: 11px; color: var(--text-dim); text-transform: uppercase; letter-spacing: 1px; margin-bottom: 10px; }
+    .uc-title { font-family: 'Syne', sans-serif; font-size: 17px; font-weight: 700; margin-bottom: 10px; }
+    .uc-desc { font-size: 13px; color: var(--text-dim); line-height: 1.6; }
+    .uc-icon { font-size: 32px; margin-bottom: 12px; }
+    .uc-tags { display: flex; gap: 6px; flex-wrap: wrap; margin-top: 14px; }
+    .uc-tag { font-size: 11px; color: var(--purple-glow); background: rgba(124,58,237,0.1); border: 1px solid var(--border); padding: 3px 10px; border-radius: 20px; }
+
+    /* ADMIN MODAL */
+  
+  
+    /* FOOTER */
+    footer {
+      text-align: center; padding: 30px; font-size: 13px; color: var(--text-dim);
+      border-top: 1px solid var(--border); margin-top: 40px;
+      background: var(--bg2); position: relative; z-index: 1;
+    }
+    footer a { color: var(--purple-glow); text-decoration: none; }
+
+    /* ANIMATIONS */
+    @keyframes fadeUp { from{opacity:0;transform:translateY(20px)} to{opacity:1;transform:translateY(0)} }
+    .fade-in { animation: fadeUp 0.6s ease both; }
+
+    /* TOP BTN */
+    #topBtn {
+      display: none; position: fixed; bottom: 28px; right: 28px; z-index: 50;
+      background: var(--purple); color: white; border: none; width: 44px; height: 44px;
+      border-radius: 50%; cursor: pointer; font-size: 18px;
+      box-shadow: 0 0 20px rgba(124,58,237,0.5); transition: all 0.3s;
+    }
+    #topBtn:hover { background: var(--purple-light); transform: translateY(-3px); }
+
+    /* RESPONSIVE */
+    @media(max-width:768px) {
+      header { padding: 0 16px; }
+      .logo { font-size: 18px; }
+      nav a { padding: 6px 10px; font-size: 13px; }
+      .section { padding: 30px 16px; }
+      .hero { padding: 60px 16px 40px; }
+      .lang-bar { padding: 8px 16px; }
+      .charts-triple { grid-template-columns: 1fr; }
+    }
+  </style>
+</head>
+<body>
+
+
+
+<!-- MAIN SITE -->
+<header>
+  <div class="logo">Scam<span>Y</span></div>
+  <nav>
+    <a data-key="nav_main" href="index.html" class="active">Home</a>
+    <a data-key="nav_scams" href="scam.html">Scams</a>
+    <a data-key="nav_quiz" href="quiz.html">Quiz</a>
+    <a data-key="nav_checker" href="checker.html">Checker</a>
+    <a data-key="nav_contact" href="contact.html">Report</a>
+    <a data-key="nav_admin" href="admin.html">⚙ Admin</a>
+  </nav>
+</header>
+
+<div class="lang-bar">
+  <button class="lang-btn active" onclick="setLang('en',this)">🇬🇧 English</button>
+  <button class="lang-btn" onclick="setLang('hi',this)">🇮🇳 हिन्दी</button>
+  <button class="lang-btn" onclick="setLang('mr',this)">🇮🇳 मराठी</button>
+</div>
+
+<!-- LIVE TICKER -->
+<div class="ticker">
+  <div class="ticker-inner" id="tickerInner">
+    <div class="ticker-item">🚨 <span class="tag">LIVE</span> Digital Arrest Scam · Victim lost <b>₹22.92 Cr</b> · Hyderabad</div>
+    <div class="ticker-item">🚨 <span class="tag">ALERT</span> UPI Hijack cases surged <b>340%</b> in Q1 2026</div>
+    <div class="ticker-item">🚨 <span class="tag">LIVE</span> WhatsApp APK malware active — Do NOT install unknown .apk files</div>
+    <div class="ticker-item">🚨 <span class="tag">WARNING</span> Fake CBI calls reported in Delhi, Mumbai, Pune</div>
+    <div class="ticker-item">🚨 <span class="tag">LIVE</span> Crypto scam network worth <b>₹2,200 Cr</b> busted in Bengaluru</div>
+    <div class="ticker-item">🚨 <span class="tag">LIVE</span> Digital Arrest Scam · Victim lost <b>₹22.92 Cr</b> · Hyderabad</div>
+    <div class="ticker-item">🚨 <span class="tag">ALERT</span> UPI Hijack cases surged <b>340%</b> in Q1 2026</div>
+    <div class="ticker-item">🚨 <span class="tag">LIVE</span> WhatsApp APK malware active — Do NOT install unknown .apk files</div>
+    <div class="ticker-item">🚨 <span class="tag">WARNING</span> Fake CBI calls reported in Delhi, Mumbai, Pune</div>
+    <div class="ticker-item">🚨 <span class="tag">LIVE</span> Crypto scam network worth <b>₹2,200 Cr</b> busted in Bengaluru</div>
+  </div>
+</div>
+
+<!-- HERO -->
+<div class="hero">
+  <div class="hero-badge">Live Scam Intelligence · India</div>
+  <h1 data-key="welcome">Don't be the next<br><em>victim.</em></h1>
+  <p class="tagline" data-key="tagline">Fake websites look real until your money disappears. ScamY tracks real scams so you stay ahead.</p>
+
+  <!-- Live amount from DB -->
+  <div class="hero-amount-wrap">
+    <div class="hero-amount-label">📊 LIVE SCAM REPORT — INDIA</div>
+    <div class="hero-amount-val" id="heroAmount">₹0</div>
+    <div class="hero-amount-sub" data-key="report_sub">Total money lost to digital scams (reported via ScamY)</div>
+  </div>
+  <div class="hero-report-badges">
+    <div class="hero-badge-pill">Cases Reported: <span id="badge-cases">—</span></div>
+    <div class="hero-badge-pill">Scam Types: <span id="badge-types">—</span></div>
+    <div class="hero-badge-pill">Last Updated: <span id="badge-time">—</span></div>
+  </div>
+
+  <div class="hero-cta" style="margin-top:28px;">
+    <a href="scam.html" class="btn-primary">View Real Cases →</a>
+    <a href="quiz.html" class="btn-outline">Test Your Awareness</a>
+  </div>
+</div>
+
+<!-- SCAM FLOW STRIP -->
+<div class="scam-flow">
+  <div class="scam-flow-step">👤 User</div>
+  <div class="scam-flow-arrow">→</div>
+  <div class="scam-flow-step">📱 Device</div>
+  <div class="scam-flow-arrow">→</div>
+  <div class="scam-flow-step">⚠️ Scam</div>
+  <div class="scam-flow-arrow">→</div>
+  <div class="scam-flow-step">💸 Money Lost</div>
+  <div class="scam-flow-arrow">→</div>
+  <div class="scam-flow-step">😢 Victim</div>
+</div>
+
+<!-- STATS DASHBOARD -->
+<div class="section">
+  <div class="section-title" data-key="dash_title">Live Dashboard</div>
+  <div class="section-sub" data-key="dash_sub">Real-time data from reported scam cases. Updates every 5 seconds.</div>
+
+  <div class="stats-grid">
+    <div class="stat-card">
+      <div class="stat-label" data-key="stat_total">Total Scams Reported</div>
+      <div class="stat-val red" id="totalScams">0</div>
+      <div class="stat-change">↑ Growing daily</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-label" data-key="stat_amount">Total Money Lost</div>
+      <div class="stat-val gold" id="totalAmount">₹0</div>
+      <div class="stat-change">↑ growing daily</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-label">UPI Scams</div>
+      <div class="stat-val" id="upiCount">0</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-label">OTP Scams</div>
+      <div class="stat-val" id="otpCount">0</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-label">Call Scams</div>
+      <div class="stat-val" id="callCount">0</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-label">Digital Arrest</div>
+      <div class="stat-val" id="arrestCount">0</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-label">Phishing</div>
+      <div class="stat-val" id="phishCount">0</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-label">Fake App</div>
+      <div class="stat-val" id="fakeAppCount">0</div>
+    </div>
+  </div>
+
+  <!-- PRIMARY BAR CHART -->
+  <div class="chart-wrap">
+    <div class="chart-header">
+      <div class="chart-title" data-key="chart_title">Scam Type Breakdown</div>
+      <div class="live-badge"><div class="live-dot"></div> Live Data</div>
+    </div>
+    <canvas id="scamChart" height="80"></canvas>
+  </div>
+
+  <!-- THREE CHARTS: Bar · Doughnut · Line -->
+  <div class="charts-triple">
+    <div class="chart-wrap" style="margin-bottom:0;">
+      <div class="chart-header">
+        <div class="chart-title">Cases by Type</div>
+      </div>
+      <canvas id="barChart" height="200"></canvas>
+    </div>
+    <div class="chart-wrap" style="margin-bottom:0;">
+      <div class="chart-header">
+        <div class="chart-title">Distribution</div>
+      </div>
+      <canvas id="pieChart" height="200"></canvas>
+    </div>
+    <div class="chart-wrap" style="margin-bottom:0;">
+      <div class="chart-header">
+        <div class="chart-title">Loss Over Time</div>
+      </div>
+      <canvas id="lineChart" height="200"></canvas>
+    </div>
+  </div>
+
+  <!-- RECENT REPORTS TABLE -->
+  <div class="section-title" style="margin-top:30px;margin-bottom:16px;" data-key="recent_title">
+    Recent Reports <span style="font-size:12px;color:var(--text-dim);font-weight:400;">(Personal info hidden)</span>
+  </div>
+  <div style="background:var(--card-bg);border:1px solid var(--border);border-radius:14px;overflow:hidden;">
+    <div style="overflow-x:auto;">
+      <table style="width:100%;border-collapse:collapse;">
+        <thead>
+          <tr style="background:rgba(124,58,237,0.08);">
+            <th style="padding:13px 16px;text-align:left;font-size:11px;color:var(--text-dim);text-transform:uppercase;letter-spacing:0.8px;border-bottom:1px solid var(--border);">#</th>
+            <th style="padding:13px 16px;text-align:left;font-size:11px;color:var(--text-dim);text-transform:uppercase;letter-spacing:0.8px;border-bottom:1px solid var(--border);">Name</th>
+            <th style="padding:13px 16px;text-align:left;font-size:11px;color:var(--text-dim);text-transform:uppercase;letter-spacing:0.8px;border-bottom:1px solid var(--border);">Amount Lost</th>
+            <th style="padding:13px 16px;text-align:left;font-size:11px;color:var(--text-dim);text-transform:uppercase;letter-spacing:0.8px;border-bottom:1px solid var(--border);">Scam Type</th>
+          </tr>
+        </thead>
+        <tbody id="recentList">
+          <tr><td colspan="4" style="padding:30px;text-align:center;color:var(--text-dim);">Loading reports…</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+<!-- SCAM TYPES -->
+<div class="section">
+  <div class="section-title" data-key="types_title">Know the Scam Types</div>
+  <div class="section-sub" data-key="types_sub">Recognising patterns is your first line of defence.</div>
+  <div class="scam-grid">
+    <div class="scam-card fade-in">
+      <div class="scam-icon">📲</div>
+      <h3 data-key="otp_title">OTP Scams</h3>
+      <p data-key="otp_desc">Scammers trick you into sharing your one-time password by pretending to be bank staff. Once you share it, they access your account instantly. One-time password becomes one-time regret.</p>
+    </div>
+    <div class="scam-card fade-in">
+      <div class="scam-icon">📞</div>
+      <h3 data-key="call_title">Call Forward Scams</h3>
+      <p data-key="call_desc">Fraudsters ask you to dial a code for "verification." This redirects your calls to them, allowing them to intercept OTPs and drain your account. Your calls get hijacked, your money follows.</p>
+    </div>
+    <div class="scam-card fade-in">
+      <div class="scam-icon">💬</div>
+      <h3 data-key="sms_title">Fake Bank Messages</h3>
+      <p data-key="sms_desc">Urgent SMS or WhatsApp messages from fake bank numbers with phishing links. Looks urgent. Is fake. Ends expensive.</p>
+    </div>
+    <div class="scam-card fade-in">
+      <div class="scam-icon">🎭</div>
+      <h3 data-key="fakecall_title">Fake CBI/Police Calls</h3>
+      <p data-key="fakecall_desc">Scammers impersonate CBI, police, or TRAI officials to extort money through fabricated legal threats. You didn't commit a crime — they did.</p>
+    </div>
+  </div>
+</div>
+
+<!-- USE CASES -->
+<div class="section">
+  <div class="section-title">How ScamY Helps — Use Cases</div>
+  <div class="section-sub">Real scenarios where ScamY makes a difference.</div>
+  <div class="usecase-grid">
+    <div class="usecase-card">
+      <div class="uc-icon">👵</div>
+      <div class="uc-step">Use Case 01</div>
+      <div class="uc-title">Elderly Victim Gets a Suspicious Call</div>
+      <div class="uc-desc">Ramabai, 68, from Pune receives a call from "CBI." She visits ScamY, checks the Digital Arrest scam pattern, recognises the fraud, and disconnects immediately. Potential loss: ₹8 lakh — averted.</div>
+      <div class="uc-tags"><span class="uc-tag">Scam Detection</span><span class="uc-tag">Real Cases</span></div>
+    </div>
+    <div class="usecase-card">
+      <div class="uc-icon">👨‍🎓</div>
+      <div class="uc-step">Use Case 02</div>
+      <div class="uc-title">College Student Tests Their Scam IQ</div>
+      <div class="uc-desc">Arjun, 20, from Nagpur takes the ScamY quiz before setting up his first UPI account. He scores 7/10 and learns that he should never share OTPs — even with callers claiming to be from his bank.</div>
+      <div class="uc-tags"><span class="uc-tag">Quiz</span><span class="uc-tag">UPI Safety</span></div>
+    </div>
+    <div class="usecase-card">
+      <div class="uc-icon">👮</div>
+      <div class="uc-step">Use Case 03</div>
+      <div class="uc-title">Admin Reviews Surge in Cases</div>
+      <div class="uc-desc">ScamY admin logs in via secure portal and notices a spike in UPI Hijack cases from Delhi. He exports data, coordinates with cyber cell partners, and updates awareness content.</div>
+      <div class="uc-tags"><span class="uc-tag">Admin Panel</span><span class="uc-tag">Data Review</span></div>
+    </div>
+    <div class="usecase-card">
+      <div class="uc-icon">📣</div>
+      <div class="uc-step">Use Case 04</div>
+      <div class="uc-title">Scam Victim Reports Their Case</div>
+      <div class="uc-desc">Kavita, 45, recently lost ₹1.2 lakh to a fake courier scam. She fills the ScamY Report form, which logs the case to the live database, helping warn others and building aggregate awareness stats.</div>
+      <div class="uc-tags"><span class="uc-tag">Reporting</span><span class="uc-tag">Community Data</span></div>
+    </div>
+    <div class="usecase-card">
+      <div class="uc-icon">🏫</div>
+      <div class="uc-step">Use Case 05</div>
+      <div class="uc-title">School Awareness Programme</div>
+      <div class="uc-desc">A teacher from Mumbai uses ScamY's multilingual feature to run a Hindi-language scam awareness session. Students browse real cases in Marathi, improving relatability and retention in rural Maharashtra.</div>
+      <div class="uc-tags"><span class="uc-tag">Multilingual</span><span class="uc-tag">Education</span></div>
+    </div>
+    <div class="usecase-card">
+      <div class="uc-icon">🔍</div>
+      <div class="uc-step">Use Case 06</div>
+      <div class="uc-title">Journalist Researching Fraud Trends</div>
+      <div class="uc-desc">A reporter uses ScamY's live dashboard to pull aggregated scam data for a feature article on rising UPI fraud in Tier-2 cities. The live charts and recent reports give real, verifiable numbers.</div>
+      <div class="uc-tags"><span class="uc-tag">Analytics</span><span class="uc-tag">Research</span></div>
+    </div>
+  </div>
+</div>
+
+<!-- SAFETY TIPS -->
+<div class="section">
+  <div class="section-title" data-key="safety_title">Safety Tips</div>
+  <div class="section-sub">Simple rules that protect you every day.</div>
+  <div class="tips-grid">
+    <div class="tips-card dos">
+      <div class="tips-title green" data-key="dos_title">✅ Do's</div>
+      <div class="tip-item"><div class="tip-dot green">✓</div><span data-key="do1">Verify unknown calls before sharing any information</span></div>
+      <div class="tip-item"><div class="tip-dot green">✓</div><span data-key="do2">Use strong, unique passwords for banking apps 🔑</span></div>
+      <div class="tip-item"><div class="tip-dot green">✓</div><span data-key="do3">Enable 2-factor authentication on all accounts</span></div>
+      <div class="tip-item"><div class="tip-dot green">✓</div><span data-key="do4">Check website URLs carefully before entering details</span></div>
+      <div class="tip-item"><div class="tip-dot green">✓</div><span data-key="do5">Install apps only from official Google Play or App Store 📱</span></div>
+      <div class="tip-item"><div class="tip-dot green">✓</div><span data-key="do6">Keep all apps and OS updated regularly</span></div>
+    </div>
+    <div class="tips-card donts">
+      <div class="tips-title red" data-key="donts_title">❌ Don'ts</div>
+      <div class="tip-item"><div class="tip-dot red">✕</div><span data-key="dont1">Never share OTP, PIN, CVV with anyone — ever</span></div>
+      <div class="tip-item"><div class="tip-dot red">✕</div><span data-key="dont2">Don't click links from unknown SMS/WhatsApp numbers 🚫</span></div>
+      <div class="tip-item"><div class="tip-dot red">✕</div><span data-key="dont3">Don't trust surprise prize or lottery messages</span></div>
+      <div class="tip-item"><div class="tip-dot red">✕</div><span data-key="dont4">Don't install APK files from unknown websites</span></div>
+      <div class="tip-item"><div class="tip-dot red">✕</div><span data-key="dont5">Don't share screen with unknown callers or apps</span></div>
+    </div>
+  </div>
+</div>
+
+<footer>
+  © 2026 ScamY · Scam Awareness India · Built by <a href="#">Kiran, Ashwin, Harshal &amp; Siddharth</a> ·
+  Emergency Helpline: <strong style="color:var(--accent)">1930</strong>
+</footer>
+
+<button id="topBtn" onclick="window.scrollTo({top:0,behavior:'smooth'})">↑</button>
+
+<script>
+// ── SUPABASE CLIENT ───────────────────────────────────────────
+const client = supabase.createClient(
+  "https://kyfjmaeybpnfoxavtlcz.supabase.co",
+  "sb_publishable_PfINMvLfU3t2TWNsSpVkdw_bs2tAqIc"
+);
+
+// ── TOP BUTTON ────────────────────────────────────────────────
+window.addEventListener('scroll', () => {
+  document.getElementById('topBtn').style.display = window.scrollY > 300 ? 'block' : 'none';
+});
+
+// ── ADMIN AUTH ───────────────────────────────────────────────
+
+
+// ── ADMIN DATA ────────────────────────────────────────────────
+
+// ── HELPERS ────────────────────────────────────────────────────
+function animateValue(id, end, prefix = "") {
+  let current = 0;
+  const step = end / 60;
+  const timer = setInterval(() => {
+    current = Math.min(current + step, end);
+    const el = document.getElementById(id);
+    if (el) el.textContent = prefix + Math.floor(current).toLocaleString('en-IN');
+    if (current >= end) clearInterval(timer);
+  }, 20);
+}
+
+function maskName(name) {
+  if (!name) return '***';
+  const parts = name.trim().split(' ');
+  return parts.map(p => p[0] + (p.length > 1 ? '*'.repeat(p.length - 1) : '')).join(' ');
+}
+
+// ── CHARTS ─────────────────────────────────────────────────────
+let mainChart, barChart, pieChart, lineChart;
+
+function buildCharts(types, timeline) {
+  const chartOpts = { color: '#e0d4ff', grid: { color: 'rgba(124,58,237,0.15)' } };
+
+  // Main summary bar
+  const ctx0 = document.getElementById("scamChart").getContext("2d");
+  if (mainChart) mainChart.destroy();
+  mainChart = new Chart(ctx0, {
+    type: "bar",
+    data: {
+      labels: Object.keys(types),
+      datasets: [{
+        label: "Reports",
+        data: Object.values(types),
+        backgroundColor: ['#7c3aed','#a855f7','#c084fc','#e040fb','#9333ea'],
+        borderRadius: 8, borderSkipped: false
+      }]
+    },
+    options: {
+      plugins: { legend: { display: false } },
+      scales: {
+        x: { grid: { color: 'rgba(255,255,255,0.04)' }, ticks: { color: '#9178b5' } },
+        y: { grid: { color: 'rgba(255,255,255,0.04)' }, ticks: { color: '#9178b5' } }
+      }
+    }
+  });
+
+  // Cases by type — bar
+  if (barChart) barChart.destroy();
+  barChart = new Chart(document.getElementById('barChart'), {
+    type: 'bar',
+    data: {
+      labels: Object.keys(types),
+      datasets: [{ label: 'Cases', data: Object.values(types), backgroundColor: ['#7c3aed','#a855f7','#c084fc'], borderRadius: 8 }]
+    },
+    options: { responsive: true, plugins: { legend: { labels: { color: '#ede9fe' } }, title: { display: true, text: 'Cases by Scam Type', color: '#c084fc' } }, scales: { x: { ticks: { color: '#9178b5' }, grid: chartOpts.grid }, y: { ticks: { color: '#9178b5' }, grid: chartOpts.grid } } }
+  });
+
+  // Distribution — doughnut
+  if (pieChart) pieChart.destroy();
+  pieChart = new Chart(document.getElementById('pieChart'), {
+    type: 'doughnut',
+    data: {
+      labels: Object.keys(types),
+      datasets: [{ data: Object.values(types), backgroundColor: ['#7c3aed','#a855f7','#ef4444'], borderColor: '#060408', borderWidth: 3 }]
+    },
+    options: { responsive: true, plugins: { legend: { labels: { color: '#ede9fe' } }, title: { display: true, text: 'Distribution', color: '#c084fc' } } }
+  });
+
+  // Loss over time — line
+  if (lineChart) lineChart.destroy();
+  lineChart = new Chart(document.getElementById('lineChart'), {
+    type: 'line',
+    data: {
+      labels: timeline.map(t => t.label),
+      datasets: [{ label: 'Amount Lost (₹)', data: timeline.map(t => t.amount), borderColor: '#ef4444', backgroundColor: 'rgba(239,68,68,0.1)', fill: true, tension: 0.4, pointBackgroundColor: '#a855f7', pointRadius: 5 }]
+    },
+    options: { responsive: true, plugins: { legend: { labels: { color: '#ede9fe' } }, title: { display: true, text: 'Loss Over Time', color: '#c084fc' } }, scales: { x: { ticks: { color: '#9178b5' }, grid: chartOpts.grid }, y: { ticks: { color: '#9178b5', callback: v => '₹' + v.toLocaleString() }, grid: chartOpts.grid } } }
+  });
+}
+
+// ── DASHBOARD ──────────────────────────────────────────────────
+async function loadDashboard() {
+  const { data, error } = await client
+    .from("reports")
+    .select("name, amount, type");
+
+  if (error || !data) {
+    console.error('Supabase fetch error:', error);
+    document.getElementById('recentList').innerHTML =
+      `<tr><td colspan="4" style="padding:30px;text-align:center;color:var(--red);">⚠️ Could not load data: ${error?.message || 'Unknown error'}</td></tr>`;
+    return;
+  }
+
+  const total = data.length;
+  const amount = data.reduce((s, r) => s + (Number(r.amount) || 0), 0);
+
+  // Count by scam type dynamically
+  const typeCounts = {};
+  data.forEach(r => {
+    const t = r.type || 'Other';
+    typeCounts[t] = (typeCounts[t] || 0) + 1;
+  });
+
+  animateValue("totalScams", total);
+  animateValue("totalAmount", amount, "₹");
+  animateValue("heroAmount", amount, "₹");
+  animateValue("upiCount",     typeCounts['UPI Scam']       || 0);
+  animateValue("otpCount",     typeCounts['OTP Scam']       || 0);
+  animateValue("callCount",    typeCounts['Call Scam']      || 0);
+  animateValue("arrestCount",  typeCounts['Digital Arrest'] || 0);
+  animateValue("phishCount",   typeCounts['Phishing']       || 0);
+  animateValue("fakeAppCount", typeCounts['Fake App']       || 0);
+  document.getElementById('badge-cases').textContent = total.toLocaleString('en-IN');
+  document.getElementById('badge-types').textContent = Object.keys(typeCounts).length + ' types';
+  const now = new Date();
+  document.getElementById('badge-time').textContent =
+    now.toLocaleDateString('en-IN', { day:'2-digit', month:'short' }) + ' ' +
+    now.toLocaleTimeString('en-IN', { hour:'2-digit', minute:'2-digit' });
+
+  const recent6 = data.slice(0, 6);
+  const timeline = [...recent6].reverse().map((r, i) => ({ label: 'Case ' + (i + 1), amount: Number(r.amount) || 0 }));
+  buildCharts(typeCounts, timeline);
+
+  // Recent reports table rows with masked names
+    // Recent reports table rows with masked names
+  const { data: recent, error: rErr } = await client
+    .from("reports")
+    .select("id, name, amount, type")
+    .order("id", { ascending: false })
+    .limit(5);
+
+  const tbody = document.getElementById("recentList");
+  const scamIcons = { 'UPI Scam': '💳', 'OTP Scam': '🔐', 'Call Scam': '📞', 'Digital Arrest': '🎭', 'Phishing': '🎣', 'Fake App': '📱' };
+
+  if (rErr || !recent || recent.length === 0) {
+    tbody.innerHTML = `<tr><td colspan="4" style="padding:30px;text-align:center;color:var(--text-dim);">No reports yet.</td></tr>`;
+    return;
+  }
+
+  tbody.innerHTML = recent.map((item, i) => {
+    const masked = maskName(item.name || 'Unknown');
+    const icon = scamIcons[item.type] || '⚠️';
+    return `
+      <tr style="border-bottom:1px solid rgba(255,255,255,0.04);">
+        <td style="padding:12px 16px;font-size:13px;color:var(--text-dim);">${i + 1}</td>
+        <td style="padding:12px 16px;font-size:14px;font-weight:600;">👤 ${masked}</td>
+        <td style="padding:12px 16px;font-size:14px;font-weight:700;font-family:'Syne',sans-serif;color:var(--red);">${icon} ₹${(Number(item.amount) || 0).toLocaleString('en-IN')}</td>
+        <td style="padding:12px 16px;"><span style="background:rgba(124,58,237,0.12);color:var(--purple-glow);padding:3px 10px;border-radius:6px;font-size:11px;border:1px solid var(--border);">${item.type || '—'}</span></td>
+      </tr>`;
+  }).join('');
+}
+
+loadDashboard();
+setInterval(loadDashboard, 5000);
+
+
+// ── TRANSLATIONS ──────────────────────────────────────────────
+const translations = {
+  en: {
+    nav_main:"Home", nav_scams:"Scams", nav_quiz:"Quiz", nav_checker:"Checker", nav_contact:"Report",
+    welcome:"Don't be the next<br><em>victim.</em>",
+    tagline:"Fake websites look real until your money disappears. ScamY tracks real scams so you stay ahead.",
+    report_sub:"Total money lost to digital scams (reported via ScamY)",
+    dash_title:"Live Dashboard", dash_sub:"Real-time data from reported scam cases. Updates every 5 seconds.",
+    stat_total:"Total Scams Reported", stat_amount:"Total Money Lost",
+    chart_title:"Scam Type Breakdown", recent_title:"Recent Reports",
+    types_title:"Know the Scam Types", types_sub:"Recognising patterns is your first line of defence.",
+    otp_title:"OTP Scams", otp_desc:"Scammers trick you into sharing your OTP by pretending to be bank staff. One-time password becomes one-time regret.",
+    call_title:"Call Forward Scams", call_desc:"Fraudsters ask you to forward calls for verification. This lets them intercept your OTPs and drain your account.",
+    sms_title:"Fake Bank Messages", sms_desc:"Urgent SMS from fake bank numbers with phishing links. Looks urgent. Is fake. Ends expensive.",
+    fakecall_title:"Fake CBI/Police Calls", fakecall_desc:"Scammers impersonate CBI or police officials to extort money through fear. You didn't commit a crime — they did.",
+    safety_title:"Safety Tips", dos_title:"✅ Do's", donts_title:"❌ Don'ts",
+    do1:"Verify unknown calls before sharing any information",
+    do2:"Use strong, unique passwords for banking apps 🔑",
+    do3:"Enable 2-factor authentication on all accounts",
+    do4:"Check website URLs carefully before entering details",
+    do5:"Install apps only from official Google Play or App Store 📱",
+    do6:"Keep all apps and OS updated regularly",
+    dont1:"Never share OTP, PIN, CVV with anyone — ever",
+    dont2:"Don't click links from unknown SMS/WhatsApp 🚫",
+    dont3:"Don't trust surprise prize or lottery messages",
+    dont4:"Don't install APK files from unknown websites",
+    dont5:"Don't share screen with unknown callers or apps"
+  },
+  hi: {
+    nav_main:"होम", nav_scams:"घोटाले", nav_quiz:"क्विज़", nav_checker:"जाँचकर्ता", nav_contact:"रिपोर्ट",
+    welcome:"अगला शिकार<br><em>आप न बनें।</em>",
+    tagline:"नकली वेबसाइटें असली लगती हैं जब तक आपका पैसा गायब न हो जाए। ScamY वास्तविक घोटालों को ट्रैक करता है।",
+    report_sub:"डिजिटल घोटालों में खोई कुल राशि (ScamY के माध्यम से रिपोर्ट की गई)",
+    dash_title:"लाइव डैशबोर्ड", dash_sub:"रिपोर्ट किए गए घोटालों का वास्तविक समय डेटा। हर 5 सेकंड में अपडेट।",
+    stat_total:"कुल रिपोर्ट", stat_amount:"कुल नुकसान",
+    chart_title:"घोटाला प्रकार विश्लेषण", recent_title:"हाल की रिपोर्टें",
+    types_title:"घोटाले के प्रकार जानें", types_sub:"पैटर्न पहचानना आपकी पहली सुरक्षा है।",
+    otp_title:"OTP घोटाले", otp_desc:"जालसाज़ बैंक कर्मचारी बनकर आपका OTP चुराते हैं। एक बार दिया तो खाता खाली।",
+    call_title:"कॉल फॉरवर्ड घोटाले", call_desc:"धोखेबाज़ कोड डायल करवाते हैं और आपके OTP चुरा लेते हैं।",
+    sms_title:"नकली बैंक संदेश", sms_desc:"बैंक के नाम पर नकली SMS भेजकर फिशिंग लिंक पर क्लिक करवाते हैं।",
+    fakecall_title:"नकली CBI/पुलिस कॉल", fakecall_desc:"CBI या पुलिस बनकर डराकर पैसे ऐंठते हैं। गुनहगार आप नहीं, वे हैं।",
+    safety_title:"सुरक्षा टिप्स", dos_title:"✅ करें", donts_title:"❌ न करें",
+    do1:"जानकारी देने से पहले अज्ञात कॉल सत्यापित करें",
+    do2:"बैंकिंग ऐप्स के लिए मजबूत पासवर्ड उपयोग करें 🔑",
+    do3:"सभी खातों पर 2FA सक्षम करें",
+    do4:"URL ध्यान से जांचें",
+    do5:"केवल Google Play या App Store से ऐप इंस्टॉल करें 📱",
+    do6:"सभी ऐप्स और OS नियमित रूप से अपडेट करें",
+    dont1:"OTP, PIN, CVV कभी किसी से साझा न करें",
+    dont2:"अज्ञात SMS/WhatsApp लिंक पर क्लिक न करें 🚫",
+    dont3:"नकली इनाम संदेशों पर भरोसा न करें",
+    dont4:"अज्ञात साइटों से APK इंस्टॉल न करें",
+    dont5:"अनजान लोगों के साथ स्क्रीन शेयर न करें"
+  },
+  mr: {
+    nav_main:"मुख्य", nav_scams:"फसवणूक", nav_quiz:"प्रश्नमंजुषा", nav_checker:"तपासक", nav_contact:"रिपोर्ट",
+    welcome:"पुढचा बळी<br><em>तुम्ही नसा.</em>",
+    tagline:"बनावट वेबसाइट खऱ्या वाटतात जोपर्यंत तुमचे पैसे गायब होत नाहीत. ScamY खऱ्या फसवणुका ट्रॅक करतो.",
+    report_sub:"डिजिटल फसवणुकांमध्ये गमावलेली एकूण रक्कम (ScamY द्वारे नोंदवलेली)",
+    dash_title:"लाइव्ह डॅशबोर्ड", dash_sub:"नोंदवलेल्या फसवणुकांचा रिअल-टाइम डेटा. दर 5 सेकंदात अपडेट.",
+    stat_total:"एकूण नोंदी", stat_amount:"एकूण नुकसान",
+    chart_title:"फसवणूक प्रकार विश्लेषण", recent_title:"अलीकडील नोंदी",
+    types_title:"फसवणुकीचे प्रकार जाणून घ्या", types_sub:"नमुने ओळखणे ही तुमची पहिली सुरक्षा आहे.",
+    otp_title:"OTP फसवणूक", otp_desc:"फसवणूकदार बँक कर्मचारी असल्याचे भासवून OTP मागतात. एकदा दिले की खाते रिकामे.",
+    call_title:"कॉल फॉरवर्ड फसवणूक", call_desc:"पडताळणीच्या नावाखाली कॉल फॉरवर्ड करायला सांगतात आणि OTP चोरतात.",
+    sms_title:"बनावट बँक संदेश", sms_desc:"बँकेच्या नावाने तातडीचे SMS ज्यात फिशिंग लिंक असतात.",
+    fakecall_title:"बनावट CBI/पोलीस फोन", fakecall_desc:"CBI किंवा पोलीस असल्याचे भासवून खोटे आरोप करतात. गुन्हेगार तुम्ही नाही, ते आहेत.",
+    safety_title:"सुरक्षा टिप्स", dos_title:"✅ करा", donts_title:"❌ करू नका",
+    do1:"माहिती देण्यापूर्वी अज्ञात कॉल तपासा",
+    do2:"बँकिंग ॲप्ससाठी मजबूत पासवर्ड वापरा 🔑",
+    do3:"सर्व खात्यांवर 2FA सक्षम करा",
+    do4:"डेटा टाकण्यापूर्वी URL काळजीपूर्वक तपासा",
+    do5:"केवळ Google Play किंवा App Store वरून ॲप इन्स्टॉल करा 📱",
+    do6:"सर्व ॲप्स आणि OS नियमितपणे अपडेट ठेवा",
+    dont1:"OTP, PIN, CVV कोणाशीही कधीही शेअर करू नका",
+    dont2:"अज्ञात SMS/WhatsApp मधील लिंकवर क्लिक करू नका 🚫",
+    dont3:"अचानक बक्षीस किंवा लॉटरीच्या संदेशांवर विश्वास ठेवू नका",
+    dont4:"अज्ञात वेबसाइटवरून APK फाइल्स इन्स्टॉल करू नका",
+    dont5:"अनोळखी लोकांसोबत स्क्रीन शेअर करू नका"
+  }
+};
+
+function setLang(lang, btn) {
+  const t = translations[lang];
+  if (!t) return;
+  document.querySelectorAll('[data-key]').forEach(el => {
+    const key = el.getAttribute('data-key');
+    if (t[key] !== undefined) el.innerHTML = t[key];
+  });
+  document.querySelectorAll('.lang-btn').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  document.documentElement.lang = lang;
+}
+</script>
+</body>
+</html>
